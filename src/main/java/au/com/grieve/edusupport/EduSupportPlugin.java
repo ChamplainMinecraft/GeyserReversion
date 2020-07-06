@@ -18,7 +18,9 @@
 
 package au.com.grieve.edusupport;
 
+import com.nukkitx.protocol.bedrock.v363.Bedrock_v363;
 import org.geysermc.connector.event.annotations.Event;
+import org.geysermc.connector.event.events.BedrockCodecRegistryEvent;
 import org.geysermc.connector.event.events.PluginDisableEvent;
 import org.geysermc.connector.event.events.PluginEnableEvent;
 import org.geysermc.connector.plugin.GeyserPlugin;
@@ -36,6 +38,11 @@ public class EduSupportPlugin extends GeyserPlugin {
 
     public EduSupportPlugin(PluginManager pluginManager, PluginClassLoader pluginClassLoader) {
         super(pluginManager, pluginClassLoader);
+    }
+
+    @Event
+    public void onCodecRegistry(BedrockCodecRegistryEvent event) {
+        event.setCodec(Bedrock_v363.V363_CODEC);
     }
 
     @Event
