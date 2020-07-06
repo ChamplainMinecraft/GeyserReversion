@@ -18,8 +18,13 @@
 
 package au.com.grieve.edusupport;
 
+import au.com.grieve.edusupport.commands.EducationCommand;
 import au.com.grieve.edusupport.utils.MCEELoginEncryptionUtils;
 import au.com.grieve.edusupport.utils.TokenManager;
+import com.nukkitx.protocol.bedrock.data.inventory.ContainerId;
+import com.nukkitx.protocol.bedrock.data.inventory.ItemData;
+import com.nukkitx.protocol.bedrock.packet.CreativeContentPacket;
+import com.nukkitx.protocol.bedrock.packet.InventoryContentPacket;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import com.nukkitx.protocol.bedrock.packet.PlayStatusPacket;
 import com.nukkitx.protocol.bedrock.packet.ResourcePacksInfoPacket;
@@ -29,14 +34,18 @@ import org.geysermc.connector.GeyserConnector;
 import org.geysermc.connector.event.annotations.Event;
 import org.geysermc.connector.event.events.BedrockCodecRegistryEvent;
 import org.geysermc.connector.event.events.BedrockPongEvent;
+import org.geysermc.connector.event.events.GeyserStartEvent;
 import org.geysermc.connector.event.events.PluginDisableEvent;
-import org.geysermc.connector.event.events.PluginEnableEvent;
+import org.geysermc.connector.event.events.ResourceReadEvent;
 import org.geysermc.connector.event.events.UpstreamPacketReceiveEvent;
+import org.geysermc.connector.event.events.UpstreamPacketSendEvent;
 import org.geysermc.connector.plugin.GeyserPlugin;
 import org.geysermc.connector.plugin.PluginClassLoader;
 import org.geysermc.connector.plugin.PluginManager;
 import org.geysermc.connector.plugin.annotations.Plugin;
 import org.geysermc.connector.utils.LanguageUtils;
+
+import java.io.InputStream;
 
 @Plugin(
         name = "EduSupport",
@@ -91,8 +100,35 @@ public class EduSupportPlugin extends GeyserPlugin {
     }
 
     @Event
-    public void onEnable(PluginEnableEvent event) {
-        System.err.println("I'm alive");
+    public void onResourceRead(ResourceReadEvent event) {
+        // See if resource exists in our own folder and load it instead
+        InputStream stream = EduSupportPlugin.getInstance().getResourceAsStream(event.getResourceName());
+        if (stream != null) {
+            System.err.println("Loading " + event.getResourceName() + " from ourself");
+            event.setInputStream(stream);
+        }
+    }
+
+    /**
+     * MCEE doesn't have a CreativeContent Packet
+     * <p>
+     * We replace it with an Inventory Packet with a container type of Creative
+     *
+     * @param event
+     */
+    @Event(filter = CreativeContentPacket.class)
+    public void onCreativeContent(UpstreamPacketSendEvent<CreativeContentPacket> event) {
+        InventoryContentPacket packet = new InventoryContentPacket();
+        packet.setContainerId(ContainerId.CREATIVE);
+        packet.setContents(event.getPacket().getEntries().values().toArray(new ItemData[0]));
+        event.getSession().sendUpstreamPacketImmediately(packet);
+        event.setCancelled(true);
+    }
+
+    @Event
+    public void onGeyserStart(GeyserStartEvent event) {
+        // Register Education command
+        getConnector().getBootstrap().getGeyserCommandManager().registerCommand(new EducationCommand(getConnector(), "education", "Education Commands", "geyser.command.education", tokenManager));
     }
 
     @Event

@@ -19,6 +19,7 @@
 package au.com.grieve.edusupport.utils;
 
 import au.com.grieve.edusupport.EduSupportPlugin;
+import au.com.grieve.edusupport.data.BedrockClientData;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,7 +35,6 @@ import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import org.geysermc.connector.GeyserConnector;
 import org.geysermc.connector.network.session.GeyserSession;
 import org.geysermc.connector.network.session.auth.AuthData;
-import org.geysermc.connector.network.session.auth.BedrockClientData;
 import org.geysermc.connector.utils.LoginEncryptionUtils;
 
 import javax.crypto.SecretKey;

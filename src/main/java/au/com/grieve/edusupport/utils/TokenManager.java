@@ -98,7 +98,7 @@ public class TokenManager {
 
         Yaml yaml = new Yaml(options);
 
-        try (FileWriter output = new FileWriter(new File(TOKENS_FILE))) {
+        try (FileWriter output = new FileWriter(new File(EduSupportPlugin.getInstance().getDataFolder(), TOKENS_FILE))) {
             yaml.dump(data, output);
         } catch (IOException ignored) {
         }
