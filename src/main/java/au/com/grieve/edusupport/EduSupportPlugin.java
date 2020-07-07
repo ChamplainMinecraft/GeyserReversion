@@ -26,7 +26,6 @@ import com.nukkitx.nbt.NbtList;
 import com.nukkitx.nbt.NbtMap;
 import com.nukkitx.nbt.NbtMapBuilder;
 import com.nukkitx.nbt.NbtUtils;
-import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.data.GameRuleData;
 import com.nukkitx.protocol.bedrock.data.inventory.ContainerId;
 import com.nukkitx.protocol.bedrock.data.inventory.ItemData;
@@ -196,8 +195,8 @@ public class EduSupportPlugin extends GeyserPlugin {
         System.err.println("I'm dead");
     }
 
-    @Event
-    public void onUpstreamSend(UpstreamPacketSendEvent<BedrockPacket> event) {
-        getLogger().info("Sending: " + event.getPacket());
-    }
+//    @Event
+//    public void onUpstreamSend(UpstreamPacketSendEvent<BedrockPacket> event) {
+//        getLogger().info("Sending: " + event.getPacket());
+//    }
 }

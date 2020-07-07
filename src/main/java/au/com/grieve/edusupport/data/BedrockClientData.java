@@ -34,4 +34,8 @@ public class BedrockClientData extends org.geysermc.connector.network.session.au
     public String getGeometryName() {
         return Base64.getEncoder().encodeToString(("{\"geometry\" : {\"default\" : \"" + JSONValue.escape(new String(geometryName.getBytes())) + "\"}}").getBytes());
     }
+
+    public String getCapeId() {
+        return "";
+    }
 }
