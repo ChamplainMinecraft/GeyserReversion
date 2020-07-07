@@ -21,6 +21,11 @@ package au.com.grieve.edusupport;
 import au.com.grieve.edusupport.commands.EducationCommand;
 import au.com.grieve.edusupport.utils.MCEELoginEncryptionUtils;
 import au.com.grieve.edusupport.utils.TokenManager;
+import com.nukkitx.nbt.NBTInputStream;
+import com.nukkitx.nbt.NbtList;
+import com.nukkitx.nbt.NbtMap;
+import com.nukkitx.nbt.NbtMapBuilder;
+import com.nukkitx.nbt.NbtUtils;
 import com.nukkitx.protocol.bedrock.data.GameRuleData;
 import com.nukkitx.protocol.bedrock.data.inventory.ContainerId;
 import com.nukkitx.protocol.bedrock.data.inventory.ItemData;
@@ -47,7 +52,10 @@ import org.geysermc.connector.plugin.PluginManager;
 import org.geysermc.connector.plugin.annotations.Plugin;
 import org.geysermc.connector.utils.LanguageUtils;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 @Plugin(
         name = "EduSupport",
@@ -106,8 +114,37 @@ public class EduSupportPlugin extends GeyserPlugin {
         // See if resource exists in our own folder and load it instead
         InputStream stream = EduSupportPlugin.getInstance().getResourceAsStream(event.getResourceName());
         if (stream != null) {
-            System.err.println("Loading " + event.getResourceName() + " from ourself");
-            event.setInputStream(stream);
+            // If resource is runtime_block_states we translate on the fly
+            if (event.getResourceName().equals("bedrock/runtime_block_states.dat")) {
+                NbtList<NbtMap> blocksTag;
+                try (NBTInputStream nbtInputStream = NbtUtils.createNetworkReader(stream)) {
+                    blocksTag = (NbtList<NbtMap>) nbtInputStream.readTag();
+                } catch (Exception e) {
+                    throw new AssertionError("Unable to get blocks from runtime block states", e);
+                }
+
+                List<NbtMap> blocksOut = new ArrayList<>();
+                while (blocksTag.size() > 0) {
+                    NbtMap tag = blocksTag.remove(0);
+                    NbtMapBuilder builder = tag.toBuilder();
+                    NbtMapBuilder blockbuilder = tag.getCompound("block").toBuilder();
+
+                    blockbuilder.put("meta", builder.get("meta"));
+                    builder.remove("meta");
+                    builder.put("block", blockbuilder.build());
+                    blocksOut.add(builder.build());
+                }
+
+
+                event.setInputStream(new InputStream() {
+                    @Override
+                    public int read() throws IOException {
+                        return 0;
+                    }
+                });
+            } else {
+                event.setInputStream(stream);
+            }
         }
     }
 
