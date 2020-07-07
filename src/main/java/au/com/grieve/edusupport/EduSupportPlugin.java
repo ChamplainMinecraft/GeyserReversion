@@ -21,6 +21,7 @@ package au.com.grieve.edusupport;
 import au.com.grieve.edusupport.commands.EducationCommand;
 import au.com.grieve.edusupport.utils.MCEELoginEncryptionUtils;
 import au.com.grieve.edusupport.utils.TokenManager;
+import com.nukkitx.protocol.bedrock.data.GameRuleData;
 import com.nukkitx.protocol.bedrock.data.inventory.ContainerId;
 import com.nukkitx.protocol.bedrock.data.inventory.ItemData;
 import com.nukkitx.protocol.bedrock.packet.CreativeContentPacket;
@@ -28,6 +29,7 @@ import com.nukkitx.protocol.bedrock.packet.InventoryContentPacket;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import com.nukkitx.protocol.bedrock.packet.PlayStatusPacket;
 import com.nukkitx.protocol.bedrock.packet.ResourcePacksInfoPacket;
+import com.nukkitx.protocol.bedrock.packet.StartGamePacket;
 import com.nukkitx.protocol.bedrock.v363.Bedrock_v363;
 import lombok.Getter;
 import org.geysermc.connector.GeyserConnector;
@@ -123,6 +125,16 @@ public class EduSupportPlugin extends GeyserPlugin {
         packet.setContents(event.getPacket().getEntries().values().toArray(new ItemData[0]));
         event.getSession().sendUpstreamPacketImmediately(packet);
         event.setCancelled(true);
+    }
+
+    /**
+     * Modify StartGamePacket being sent
+     *
+     * @param event
+     */
+    @Event(filter = StartGamePacket.class)
+    public void onStartGameSent(UpstreamPacketSendEvent<StartGamePacket> event) {
+        event.getPacket().getGamerules().add(new GameRuleData<>("codebuilder", false));
     }
 
     @Event
