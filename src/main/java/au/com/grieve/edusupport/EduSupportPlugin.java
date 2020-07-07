@@ -19,45 +19,23 @@
 package au.com.grieve.edusupport;
 
 import au.com.grieve.edusupport.commands.EducationCommand;
-import au.com.grieve.edusupport.utils.MCEELoginEncryptionUtils;
+import au.com.grieve.edusupport.packets.UpstreamPackets;
+import au.com.grieve.edusupport.translators.blocks.BlockMapperManager;
+import au.com.grieve.edusupport.translators.blocks.SimpleMapper;
 import au.com.grieve.edusupport.utils.TokenManager;
-import com.nukkitx.nbt.NBTInputStream;
-import com.nukkitx.nbt.NbtList;
-import com.nukkitx.nbt.NbtMap;
-import com.nukkitx.nbt.NbtMapBuilder;
-import com.nukkitx.nbt.NbtUtils;
-import com.nukkitx.protocol.bedrock.data.GameRuleData;
-import com.nukkitx.protocol.bedrock.data.inventory.ContainerId;
-import com.nukkitx.protocol.bedrock.data.inventory.ItemData;
-import com.nukkitx.protocol.bedrock.packet.CreativeContentPacket;
-import com.nukkitx.protocol.bedrock.packet.InventoryContentPacket;
-import com.nukkitx.protocol.bedrock.packet.LoginPacket;
-import com.nukkitx.protocol.bedrock.packet.PlayStatusPacket;
-import com.nukkitx.protocol.bedrock.packet.ResourcePacksInfoPacket;
-import com.nukkitx.protocol.bedrock.packet.StartGamePacket;
+import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.v363.Bedrock_v363;
 import lombok.Getter;
-import org.geysermc.connector.GeyserConnector;
-import org.geysermc.connector.event.EventManager;
 import org.geysermc.connector.event.annotations.Event;
 import org.geysermc.connector.event.events.BedrockCodecRegistryEvent;
 import org.geysermc.connector.event.events.BedrockPongEvent;
-import org.geysermc.connector.event.events.BuildBedrockStateEvent;
-import org.geysermc.connector.event.events.BuildBlockStateMapEvent;
 import org.geysermc.connector.event.events.GeyserStartEvent;
 import org.geysermc.connector.event.events.PluginDisableEvent;
-import org.geysermc.connector.event.events.ResourceReadEvent;
-import org.geysermc.connector.event.events.RuntimeBlockStateReadEvent;
-import org.geysermc.connector.event.events.UpstreamPacketReceiveEvent;
 import org.geysermc.connector.event.events.UpstreamPacketSendEvent;
 import org.geysermc.connector.plugin.GeyserPlugin;
 import org.geysermc.connector.plugin.PluginClassLoader;
 import org.geysermc.connector.plugin.PluginManager;
 import org.geysermc.connector.plugin.annotations.Plugin;
-import org.geysermc.connector.utils.FileUtils;
-import org.geysermc.connector.utils.LanguageUtils;
-
-import java.io.InputStream;
 
 @Plugin(
         name = "EduSupport",
@@ -71,12 +49,14 @@ public class EduSupportPlugin extends GeyserPlugin {
     public static EduSupportPlugin instance;
 
     private final TokenManager tokenManager;
+    private BlockMapperManager blockMapperManager;
 
     public EduSupportPlugin(PluginManager pluginManager, PluginClassLoader pluginClassLoader) {
         super(pluginManager, pluginClassLoader);
 
         instance = this;
         tokenManager = new TokenManager();
+        registerEvents(new UpstreamPackets());
     }
 
     @Event
@@ -89,114 +69,134 @@ public class EduSupportPlugin extends GeyserPlugin {
         event.getPong().setEdition("MCEE");
     }
 
-    @Event(filter = LoginPacket.class)
-    public void onLoginPacket(UpstreamPacketReceiveEvent<LoginPacket> event) {
-        event.setCancelled(true);
 
-        if (event.getPacket().getProtocolVersion() > GeyserConnector.BEDROCK_PACKET_CODEC.getProtocolVersion()) {
-            event.getSession().disconnect(LanguageUtils.getPlayerLocaleString("geyser.network.outdated.server", event.getSession().getClientData().getLanguageCode(), GeyserConnector.BEDROCK_PACKET_CODEC.getMinecraftVersion()));
-            return;
-        } else if (event.getPacket().getProtocolVersion() < GeyserConnector.BEDROCK_PACKET_CODEC.getProtocolVersion()) {
-            event.getSession().disconnect(LanguageUtils.getPlayerLocaleString("geyser.network.outdated.client", event.getSession().getClientData().getLanguageCode(), GeyserConnector.BEDROCK_PACKET_CODEC.getMinecraftVersion()));
-            return;
-        }
+//    @Event
+//    public void onResourceRead(ResourceReadEvent event) {
+//        // See if resource exists in our own folder and load it instead
+//        InputStream stream = EduSupportPlugin.getInstance().getResourceAsStream(event.getResourceName());
+//        if (stream != null) {
+//            event.setInputStream(stream);
+//        }
+//    }
 
-        MCEELoginEncryptionUtils.encryptPlayerConnection(getConnector(), event.getSession(), event.getPacket());
 
-        PlayStatusPacket playStatus = new PlayStatusPacket();
-        playStatus.setStatus(PlayStatusPacket.Status.LOGIN_SUCCESS);
-        event.getSession().sendUpstreamPacket(playStatus);
-
-        ResourcePacksInfoPacket resourcePacksInfo = new ResourcePacksInfoPacket();
-        event.getSession().sendUpstreamPacket(resourcePacksInfo);
-    }
-
-    @Event
-    public void onResourceRead(ResourceReadEvent event) {
-        // See if resource exists in our own folder and load it instead
-        InputStream stream = EduSupportPlugin.getInstance().getResourceAsStream(event.getResourceName());
-        if (stream != null) {
-            event.setInputStream(stream);
-        }
-    }
-
-    /**
-     * MCEE doesn't have a CreativeContent Packet
-     * <p>
-     * We replace it with an Inventory Packet with a container type of Creative
-     *
-     * @param event
-     */
-    @Event(filter = CreativeContentPacket.class)
-    public void onCreativeContent(UpstreamPacketSendEvent<CreativeContentPacket> event) {
-        InventoryContentPacket packet = new InventoryContentPacket();
-        packet.setContainerId(ContainerId.CREATIVE);
-        packet.setContents(event.getPacket().getEntries().values().toArray(new ItemData[0]));
-        event.getSession().sendUpstreamPacketImmediately(packet);
-        event.setCancelled(true);
-    }
-
-    @Event
-    public void onBuildBlockState(BuildBlockStateMapEvent event) {
-        /* Load block palette */
-        InputStream stream = FileUtils.getResource("bedrock/runtime_block_states.dat");
-
-        NbtList<NbtMap> blocksTag;
-        try (NBTInputStream nbtInputStream = NbtUtils.createNetworkReader(stream)) {
-            blocksTag = EventManager.getInstance().triggerEvent(new RuntimeBlockStateReadEvent(
-                    (NbtList<NbtMap>) nbtInputStream.readTag())).getEvent().getBlockStates();
-        } catch (Exception e) {
-            throw new AssertionError("Unable to get blocks from runtime block states", e);
-        }
-
-        for (NbtMap tag : blocksTag) {
-            // Fake up a block that includes meta
-            NbtMapBuilder tagBuilder = tag.toBuilder();
-            NbtMapBuilder blockBuilder = tag.getCompound("block").toBuilder();
-            blockBuilder.putShort("meta", tag.getShort("meta", (short) 0));
-            tagBuilder.put("block", blockBuilder.build());
-
-            if (event.getBlockStateMap().putIfAbsent(blockBuilder.build(), tag) != null) {
-                throw new AssertionError("Duplicate block states in Bedrock palette");
-            }
-        }
-        event.setCancelled(true);
-    }
-
-    @Event
-    public void onBuildBedrockState(BuildBedrockStateEvent event) {
-        NbtMapBuilder tagBuilder = NbtMap.builder();
-        tagBuilder.putString("name", event.getBlockNode().get("bedrock_identifier").textValue());
-
-        short meta = event.getBlockNode().has("meta") ? event.getBlockNode().get("meta").shortValue() : 0;
-        tagBuilder.putShort("meta", meta);
-
-        event.setBlockState(tagBuilder.build());
-    }
-
-    /**
-     * Modify StartGamePacket being sent
-     *
-     * @param event
-     */
-    @Event(filter = StartGamePacket.class)
-    public void onStartGameSent(UpstreamPacketSendEvent<StartGamePacket> event) {
-        event.getPacket().getGamerules().add(new GameRuleData<>("codebuilder", false));
-    }
+//    @Event
+//    public void onBuildBlockState(BuildBlockStateMapEvent event) {
+//        /* Load block palette */
+//        InputStream stream = FileUtils.getResource("bedrock/runtime_block_states.dat");
+//
+//        NbtList<NbtMap> blocksTag;
+//        try (NBTInputStream nbtInputStream = NbtUtils.createNetworkReader(stream)) {
+//            blocksTag = EventManager.getInstance().triggerEvent(new RuntimeBlockStateReadEvent(
+//                    (NbtList<NbtMap>) nbtInputStream.readTag())).getEvent().getBlockStates();
+//        } catch (Exception e) {
+//            throw new AssertionError("Unable to get blocks from runtime block states", e);
+//        }
+//
+//        for (NbtMap tag : blocksTag) {
+//            // Fake up a block that includes meta
+//            NbtMapBuilder tagBuilder = tag.toBuilder();
+//            NbtMapBuilder blockBuilder = tag.getCompound("block").toBuilder();
+//            blockBuilder.putShort("meta", tag.getShort("meta", (short) 0));
+//            tagBuilder.put("block", blockBuilder.build());
+//
+//            if (event.getBlockStateMap().putIfAbsent(blockBuilder.build(), tag) != null) {
+//                throw new AssertionError("Duplicate block states in Bedrock palette");
+//            }
+//        }
+//        event.setCancelled(true);
+//    }
+//
+//    @Event
+//    public void onBuildBedrockState(BuildBedrockStateEvent event) {
+//        NbtMapBuilder tagBuilder = NbtMap.builder();
+//        tagBuilder.putString("name", event.getBlockNode().get("bedrock_identifier").textValue());
+//
+//        short meta = event.getBlockNode().has("meta") ? event.getBlockNode().get("meta").shortValue() : 0;
+//        tagBuilder.putShort("meta", meta);
+//
+//        event.setBlockState(tagBuilder.build());
+//    }
 
     @Event
     public void onGeyserStart(GeyserStartEvent event) {
         // Register Education command
         getConnector().getBootstrap().getGeyserCommandManager().registerCommand(new EducationCommand(getConnector(), "education", "Education Commands", "geyser.command.education", tokenManager));
+
+        // Register BlockMappings
+        blockMapperManager = new BlockMapperManager(this)
+                .register(new SimpleMapper())
+                .execute();
+
+        //System.err.println(BlockTranslator.BLOCKS);System.exit(1);
+
     }
+
+/*    @Event
+    public void onInventoryTranslatorRegistry(InventoryTranslatorRegistryEvent event) {
+        Map<WindowType, InventoryTranslator> translators = event.getRegisteredTranslators();
+
+        translators.put(null, new PlayerInventoryTranslator()); //player inventory
+        translators.put(WindowType.GENERIC_9X1, new SingleChestInventoryTranslator(9));
+        translators.put(WindowType.GENERIC_9X2, new SingleChestInventoryTranslator(18));
+        translators.put(WindowType.GENERIC_9X3, new SingleChestInventoryTranslator(27));
+        translators.put(WindowType.GENERIC_9X4, new DoubleChestInventoryTranslator(36));
+        translators.put(WindowType.GENERIC_9X5, new DoubleChestInventoryTranslator(45));
+        translators.put(WindowType.GENERIC_9X6, new DoubleChestInventoryTranslator(54));
+        translators.put(WindowType.BREWING_STAND, new BrewingInventoryTranslator());
+        translators.put(WindowType.ANVIL, new AnvilInventoryTranslator());
+        translators.put(WindowType.CRAFTING, new CraftingInventoryTranslator());
+        translators.put(WindowType.GRINDSTONE, new GrindstoneInventoryTranslator());
+        translators.put(WindowType.MERCHANT, new MerchantInventoryTranslator());
+        translators.put(WindowType.SMITHING, new SmithingInventoryTranslator());
+        //put(WindowType.ENCHANTMENT, new EnchantmentInventoryTranslator()); //TODO
+
+        InventoryTranslator furnace = new FurnaceInventoryTranslator();
+        translators.put(WindowType.FURNACE, furnace);
+        translators.put(WindowType.BLAST_FURNACE, furnace);
+        translators.put(WindowType.SMOKER, furnace);
+
+        InventoryUpdater containerUpdater = new ContainerInventoryUpdater();
+        translators.put(WindowType.GENERIC_3X3, new BlockInventoryTranslator(9, "minecraft:dispenser[facing=north,triggered=false]", ContainerType.DISPENSER, containerUpdater));
+        translators.put(WindowType.HOPPER, new BlockInventoryTranslator(5, "minecraft:hopper[enabled=false,facing=down]", ContainerType.HOPPER, containerUpdater));
+        translators.put(WindowType.SHULKER_BOX, new BlockInventoryTranslator(27, "minecraft:shulker_box[facing=north]", ContainerType.CONTAINER, containerUpdater));
+        //put(WindowType.BEACON, new BlockInventoryTranslator(1, "minecraft:beacon", ContainerType.BEACON)); //TODO
+    }
+
+
+    @Event(filter = BedrockActionTranslator.class)
+    public void onPlayerActionPacket(UpstreamPacketReceiveEvent<PlayerActionPacket> event) {
+        Entity entity = event.getSession().getPlayerEntity();
+        if (entity == null)
+            return;
+
+        switch (event.getPacket().getAction()) {
+            case RESPAWN:
+                RespawnPacket respawnPacket = new RespawnPacket();
+                respawnPacket.setRuntimeEntityId(0);
+                respawnPacket.setPosition(Vector3f.ZERO);
+                respawnPacket.setState(RespawnPacket.State.SERVER_SEARCHING);
+                event.getSession().sendUpstreamPacket(respawnPacket);
+
+                ClientRequestPacket javaRespawnPacket = new ClientRequestPacket(ClientRequest.RESPAWN);
+                event.getSession().sendDownstreamPacket(javaRespawnPacket);
+                event.setCancelled(true);
+        }
+    }
+
+    @Event(filter = RespawnPacket.class)
+    public void onRespawnPacket(UpstreamPacketReceiveEvent<RespawnPacket> event) {
+        // MCEE doesn't seem to provide this packet but we override it just in case
+        event.setCancelled(true);
+    }*/
 
     @Event
     public void onDisable(PluginDisableEvent event) {
         System.err.println("I'm dead");
     }
 
-//    @Event
-//    public void onUpstreamSend(UpstreamPacketSendEvent<BedrockPacket> event) {
-//        getLogger().info("Sending: " + event.getPacket());
-//    }
+    @Event
+    public void onUpstreamSend(UpstreamPacketSendEvent<BedrockPacket> event) {
+        getLogger().info("Sending: " + event.getPacket());
+    }
 }
