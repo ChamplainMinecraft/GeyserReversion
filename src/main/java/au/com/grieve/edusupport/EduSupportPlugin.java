@@ -26,6 +26,7 @@ import com.nukkitx.nbt.NbtList;
 import com.nukkitx.nbt.NbtMap;
 import com.nukkitx.nbt.NbtMapBuilder;
 import com.nukkitx.nbt.NbtUtils;
+import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.data.GameRuleData;
 import com.nukkitx.protocol.bedrock.data.inventory.ContainerId;
 import com.nukkitx.protocol.bedrock.data.inventory.ItemData;
@@ -38,24 +39,26 @@ import com.nukkitx.protocol.bedrock.packet.StartGamePacket;
 import com.nukkitx.protocol.bedrock.v363.Bedrock_v363;
 import lombok.Getter;
 import org.geysermc.connector.GeyserConnector;
+import org.geysermc.connector.event.EventManager;
 import org.geysermc.connector.event.annotations.Event;
 import org.geysermc.connector.event.events.BedrockCodecRegistryEvent;
 import org.geysermc.connector.event.events.BedrockPongEvent;
+import org.geysermc.connector.event.events.BuildBedrockStateEvent;
+import org.geysermc.connector.event.events.BuildBlockStateMapEvent;
 import org.geysermc.connector.event.events.GeyserStartEvent;
 import org.geysermc.connector.event.events.PluginDisableEvent;
 import org.geysermc.connector.event.events.ResourceReadEvent;
+import org.geysermc.connector.event.events.RuntimeBlockStateReadEvent;
 import org.geysermc.connector.event.events.UpstreamPacketReceiveEvent;
 import org.geysermc.connector.event.events.UpstreamPacketSendEvent;
 import org.geysermc.connector.plugin.GeyserPlugin;
 import org.geysermc.connector.plugin.PluginClassLoader;
 import org.geysermc.connector.plugin.PluginManager;
 import org.geysermc.connector.plugin.annotations.Plugin;
+import org.geysermc.connector.utils.FileUtils;
 import org.geysermc.connector.utils.LanguageUtils;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 @Plugin(
         name = "EduSupport",
@@ -114,37 +117,7 @@ public class EduSupportPlugin extends GeyserPlugin {
         // See if resource exists in our own folder and load it instead
         InputStream stream = EduSupportPlugin.getInstance().getResourceAsStream(event.getResourceName());
         if (stream != null) {
-            // If resource is runtime_block_states we translate on the fly
-            if (event.getResourceName().equals("bedrock/runtime_block_states.dat")) {
-                NbtList<NbtMap> blocksTag;
-                try (NBTInputStream nbtInputStream = NbtUtils.createNetworkReader(stream)) {
-                    blocksTag = (NbtList<NbtMap>) nbtInputStream.readTag();
-                } catch (Exception e) {
-                    throw new AssertionError("Unable to get blocks from runtime block states", e);
-                }
-
-                List<NbtMap> blocksOut = new ArrayList<>();
-                while (blocksTag.size() > 0) {
-                    NbtMap tag = blocksTag.remove(0);
-                    NbtMapBuilder builder = tag.toBuilder();
-                    NbtMapBuilder blockbuilder = tag.getCompound("block").toBuilder();
-
-                    blockbuilder.put("meta", builder.get("meta"));
-                    builder.remove("meta");
-                    builder.put("block", blockbuilder.build());
-                    blocksOut.add(builder.build());
-                }
-
-
-                event.setInputStream(new InputStream() {
-                    @Override
-                    public int read() throws IOException {
-                        return 0;
-                    }
-                });
-            } else {
-                event.setInputStream(stream);
-            }
+            event.setInputStream(stream);
         }
     }
 
@@ -162,6 +135,44 @@ public class EduSupportPlugin extends GeyserPlugin {
         packet.setContents(event.getPacket().getEntries().values().toArray(new ItemData[0]));
         event.getSession().sendUpstreamPacketImmediately(packet);
         event.setCancelled(true);
+    }
+
+    @Event
+    public void onBuildBlockState(BuildBlockStateMapEvent event) {
+        /* Load block palette */
+        InputStream stream = FileUtils.getResource("bedrock/runtime_block_states.dat");
+
+        NbtList<NbtMap> blocksTag;
+        try (NBTInputStream nbtInputStream = NbtUtils.createNetworkReader(stream)) {
+            blocksTag = EventManager.getInstance().triggerEvent(new RuntimeBlockStateReadEvent(
+                    (NbtList<NbtMap>) nbtInputStream.readTag())).getEvent().getBlockStates();
+        } catch (Exception e) {
+            throw new AssertionError("Unable to get blocks from runtime block states", e);
+        }
+
+        for (NbtMap tag : blocksTag) {
+            // Fake up a block that includes meta
+            NbtMapBuilder tagBuilder = tag.toBuilder();
+            NbtMapBuilder blockBuilder = tag.getCompound("block").toBuilder();
+            blockBuilder.putShort("meta", tag.getShort("meta", (short) 0));
+            tagBuilder.put("block", blockBuilder.build());
+
+            if (event.getBlockStateMap().putIfAbsent(blockBuilder.build(), tag) != null) {
+                throw new AssertionError("Duplicate block states in Bedrock palette");
+            }
+        }
+        event.setCancelled(true);
+    }
+
+    @Event
+    public void onBuildBedrockState(BuildBedrockStateEvent event) {
+        NbtMapBuilder tagBuilder = NbtMap.builder();
+        tagBuilder.putString("name", event.getBlockNode().get("bedrock_identifier").textValue());
+
+        short meta = event.getBlockNode().has("meta") ? event.getBlockNode().get("meta").shortValue() : 0;
+        tagBuilder.putShort("meta", meta);
+
+        event.setBlockState(tagBuilder.build());
     }
 
     /**
@@ -183,5 +194,10 @@ public class EduSupportPlugin extends GeyserPlugin {
     @Event
     public void onDisable(PluginDisableEvent event) {
         System.err.println("I'm dead");
+    }
+
+    @Event
+    public void onUpstreamSend(UpstreamPacketSendEvent<BedrockPacket> event) {
+        getLogger().info("Sending: " + event.getPacket());
     }
 }
