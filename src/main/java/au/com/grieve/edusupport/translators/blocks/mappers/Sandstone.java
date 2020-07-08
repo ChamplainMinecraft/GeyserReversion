@@ -16,25 +16,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package au.com.grieve.edusupport.translators.blocks;
+package au.com.grieve.edusupport.translators.blocks.mappers;
 
-import com.nukkitx.nbt.NbtList;
 import com.nukkitx.nbt.NbtMap;
+import lombok.Getter;
 
-public class SimpleMapper extends BaseBlockMapper {
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Getter
+public class Sandstone extends MetaMapper {
+
+    private final List<String> accepted = Arrays.asList(
+            "minecraft:sandstone",
+            "minecraft:red_sandstone"
+    );
+
+    private final Map<String, Integer> type = new HashMap<>() {{
+        put("default", 0);
+        put("heiroglyphs", 1);
+        put("cut", 2);
+        put("smooth", 3);
+    }};
+
     @Override
-    public Integer map(NbtList<NbtMap> runtimeBlockStates, NbtMap original) {
-//        System.err.println("FROM: " + original);
-
-        String originalName = original.getCompound("block").getString("name");
-        for (int i = 0; i < runtimeBlockStates.size(); i++) {
-            NbtMap block = runtimeBlockStates.get(i);
-            if (block.getCompound("block").getString("name").equals(originalName)) {
-//                System.err.println("MATCH: " + block);
-                return i;
-            }
-        }
-//        System.err.println("NO MATCH");
-        return null;
+    public int getMeta(NbtMap originalState) {
+        return type.get(originalState.getString("sand_stone_type"));
     }
 }

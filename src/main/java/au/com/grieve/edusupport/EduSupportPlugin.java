@@ -20,8 +20,7 @@ package au.com.grieve.edusupport;
 
 import au.com.grieve.edusupport.commands.EducationCommand;
 import au.com.grieve.edusupport.packets.UpstreamPackets;
-import au.com.grieve.edusupport.translators.blocks.BlockMapperManager;
-import au.com.grieve.edusupport.translators.blocks.SimpleMapper;
+import au.com.grieve.edusupport.translators.blocks.BlockMapper;
 import au.com.grieve.edusupport.utils.TokenManager;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.v363.Bedrock_v363;
@@ -49,7 +48,6 @@ public class EduSupportPlugin extends GeyserPlugin {
     public static EduSupportPlugin instance;
 
     private final TokenManager tokenManager;
-    private BlockMapperManager blockMapperManager;
 
     public EduSupportPlugin(PluginManager pluginManager, PluginClassLoader pluginClassLoader) {
         super(pluginManager, pluginClassLoader);
@@ -124,9 +122,8 @@ public class EduSupportPlugin extends GeyserPlugin {
         getConnector().getBootstrap().getGeyserCommandManager().registerCommand(new EducationCommand(getConnector(), "education", "Education Commands", "geyser.command.education", tokenManager));
 
         // Register BlockMappings
-        blockMapperManager = new BlockMapperManager(this)
-                .register(new SimpleMapper())
-                .execute();
+        BlockMapper blockMapperManager = new BlockMapper(this);
+
 
         //System.err.println(BlockTranslator.BLOCKS);System.exit(1);
 

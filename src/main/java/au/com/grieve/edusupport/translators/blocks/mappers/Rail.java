@@ -16,11 +16,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package au.com.grieve.edusupport.translators.blocks;
+package au.com.grieve.edusupport.translators.blocks.mappers;
 
-import com.nukkitx.nbt.NbtList;
 import com.nukkitx.nbt.NbtMap;
+import lombok.Getter;
 
-public abstract class BaseBlockMapper {
-    public abstract Integer map(NbtList<NbtMap> runtimeBlockStates, NbtMap original);
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Getter
+public class Rail extends MetaMapper {
+
+    private final List<String> accepted = Arrays.asList(
+            "minecraft:golden_rail",
+            "minecraft:detector_rail"
+    );
+
+    private final Map<Boolean, Integer> data = new HashMap<>() {{
+        put(false, 0);
+        put(true, 8);
+    }};
+
+    @Override
+    public int getMeta(NbtMap originalState) {
+        return originalState.getInt("direction")
+                + data.get(originalState.getBoolean("rail_data_bit"));
+    }
 }
