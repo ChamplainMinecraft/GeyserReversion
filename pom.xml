@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ EduSupport - Minecraft Educational Support for Geyser
+  ~ EduSupport - Minecraft Protocol Support for MultiVersion in Geyser
   ~ Copyright (C) 2020 EduSupport Developers
   ~
   ~ This program is free software: you can redistribute it and/or modify
@@ -22,14 +22,18 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>au.com.grieve.edusupport</groupId>
-    <artifactId>EduSupport</artifactId>
+    <groupId>au.com.grieve.geyser.reversion</groupId>
+    <artifactId>parent</artifactId>
     <version>1.1.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <modules>
+        <module>versions</module>
+        <module>geyser-reversion</module>
+    </modules>
+    <packaging>pom</packaging>
 
-    <name>EduSupport</name>
+    <name>GeyserReversion</name>
 
-    <description>Provides support for Minecraft Education Edition in Geyser</description>
+    <description>Provides Protocol Support for MultiVersion in Geyser</description>
     <properties>
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -45,32 +49,6 @@
                 <configuration>
                     <source>11</source>
                     <target>11</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.3</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <relocations>
-                        <relocation>
-                            <pattern>com.nukkitx.protocol.bedrock.v363</pattern>
-                            <shadedPattern>${project.groupId}.${project.artifactId}.v363</shadedPattern>
-                        </relocation>
-                    </relocations>
-                    <artifactSet>
-                        <excludes>
-                            <exclude>it.unimi.dsi.fastutil:*</exclude>
-                        </excludes>
-                    </artifactSet>
                 </configuration>
             </plugin>
             <plugin>
@@ -113,35 +91,6 @@
 
     </repositories>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.2</version>
-            <scope>provided</scope>
-        </dependency>
-        <!-- Geyser -->
-        <dependency>
-            <groupId>org.geysermc</groupId>
-            <artifactId>connector</artifactId>
-            <version>1.1.0-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- Current MCEE Protocol -->
-        <dependency>
-            <groupId>com.nukkitx.protocol</groupId>
-            <artifactId>bedrock-v363</artifactId>
-            <version>2.6.0-SNAPSHOT</version>
-            <scope>compile</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-    </dependencies>
 
     <distributionManagement>
         <repository>
