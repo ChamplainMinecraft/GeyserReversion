@@ -16,17 +16,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package au.com.grieve.geyser.reversion.api;
+package au.com.grieve.geyser.reversion.versions.mcee.hook;
 
-import com.nukkitx.protocol.bedrock.BedrockServer;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import org.geysermc.connector.plugin.GeyserPlugin;
+import com.nukkitx.network.raknet.RakNetSession;
+import com.nukkitx.protocol.bedrock.BedrockServerSession;
+import com.nukkitx.protocol.bedrock.wrapper.BedrockWrapperSerializer;
+import io.netty.channel.EventLoop;
 
-@Getter
-@RequiredArgsConstructor
-public abstract class BaseEdition {
-    private final GeyserPlugin plugin;
+public class LocalBedrockServerSession extends BedrockServerSession {
+    public LocalBedrockServerSession(RakNetSession connection, EventLoop eventLoop, BedrockWrapperSerializer serializer) {
+        super(connection, eventLoop, serializer);
 
-    public abstract BedrockServer hook(BedrockServer bedrockServer);
+        System.err.println("Here");
+    }
+
+
 }

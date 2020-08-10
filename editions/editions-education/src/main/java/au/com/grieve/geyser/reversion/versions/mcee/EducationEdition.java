@@ -20,8 +20,7 @@ package au.com.grieve.geyser.reversion.versions.mcee;
 
 import au.com.grieve.geyser.reversion.api.BaseEdition;
 import au.com.grieve.geyser.reversion.versions.mcee.commands.EducationCommand;
-import au.com.grieve.geyser.reversion.versions.mcee.hook.ReversionRaknetListener;
-import au.com.grieve.geyser.reversion.versions.mcee.hook.ReversionServerEventHandler;
+import au.com.grieve.geyser.reversion.versions.mcee.hook.LocalBedrockServer;
 import au.com.grieve.geyser.reversion.versions.mcee.utils.TokenManager;
 import com.nukkitx.protocol.bedrock.BedrockServer;
 import org.geysermc.connector.GeyserConnector;
@@ -44,11 +43,10 @@ public class EducationEdition extends BaseEdition {
     }
 
     @Override
-    public void hook(BedrockServer bedrockServer) {
+    public BedrockServer hook(BedrockServer bedrockServer) {
         // Hook into Bedrock Server
         getPlugin().getLogger().debug("[Education]: Hooking into BedrockServer");
-        bedrockServer.setHandler(new ReversionServerEventHandler(bedrockServer.getHandler()));
-        bedrockServer.getRakNet().setListener(new ReversionRaknetListener(bedrockServer.getRakNet().getListener()));
+        return new LocalBedrockServer(bedrockServer);
     }
 
     @GeyserEventHandler

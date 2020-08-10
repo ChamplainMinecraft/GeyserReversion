@@ -96,7 +96,7 @@ public class GeyserReversion extends GeyserPlugin {
             return;
         }
 
-        edition.hook(event.getBedrockServer());
+        event.setBedrockServer(edition.hook(event.getBedrockServer()));
     }
 
     public void registerEdition(String name, BaseEdition edition) {
