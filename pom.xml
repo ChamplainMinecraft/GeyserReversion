@@ -26,8 +26,8 @@
     <artifactId>parent</artifactId>
     <version>1.1.0-SNAPSHOT</version>
     <modules>
-        <module>versions</module>
         <module>geyser-reversion</module>
+        <module>editions</module>
     </modules>
     <packaging>pom</packaging>
 
@@ -40,13 +40,16 @@
     </properties>
 
     <build>
+
         <defaultGoal>clean install</defaultGoal>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.7.0</version>
+
                 <configuration>
+                    <!--                    <forceJavacCompilerUse>true</forceJavacCompilerUse>-->
                     <source>11</source>
                     <target>11</target>
                 </configuration>
@@ -90,6 +93,15 @@
         </repository>
 
     </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.2</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
 
 
     <distributionManagement>
