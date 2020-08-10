@@ -20,7 +20,7 @@ package au.com.grieve.geyser.reversion;
 
 import au.com.grieve.geyser.reversion.api.BaseEdition;
 import au.com.grieve.geyser.reversion.config.Configuration;
-import au.com.grieve.geyser.reversion.versions.mcee.EducationEdition;
+import au.com.grieve.geyser.reversion.editions.mcee.EducationEdition;
 import lombok.Getter;
 import org.geysermc.connector.event.annotations.GeyserEventHandler;
 import org.geysermc.connector.event.events.network.NewBedrockServerEvent;

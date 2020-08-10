@@ -16,19 +16,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package au.com.grieve.geyser.reversion.versions.mcee.hook;
+package au.com.grieve.geyser.reversion.editions.mcee.translators.v390_v407;
 
-import com.nukkitx.network.raknet.RakNetSession;
-import com.nukkitx.protocol.bedrock.BedrockServerSession;
-import com.nukkitx.protocol.bedrock.wrapper.BedrockWrapperSerializer;
-import io.netty.channel.EventLoop;
+import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
+import com.nukkitx.protocol.bedrock.packet.LoginPacket;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-public class LocalBedrockServerSession extends BedrockServerSession {
-    public LocalBedrockServerSession(RakNetSession connection, EventLoop eventLoop, BedrockWrapperSerializer serializer) {
-        super(connection, eventLoop, serializer);
+@Getter
+@RequiredArgsConstructor
+public class UpstreamPacketHandler implements BedrockPacketHandler {
+    private final Translator translator;
 
-        System.err.println("Here");
+    @Override
+    public boolean handle(LoginPacket packet) {
+        System.err.println("HERE");
+        return false;
     }
-
-
 }

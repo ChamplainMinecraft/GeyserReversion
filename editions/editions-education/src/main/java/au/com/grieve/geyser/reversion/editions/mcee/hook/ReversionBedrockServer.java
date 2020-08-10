@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package au.com.grieve.geyser.reversion.versions.mcee.hook;
+package au.com.grieve.geyser.reversion.editions.mcee.hook;
 
 import com.nukkitx.network.raknet.RakNetServerListener;
 import com.nukkitx.network.raknet.RakNetServerSession;
@@ -42,24 +42,24 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
 
 @Getter
-public class LocalBedrockServer extends BedrockServer {
+public class ReversionBedrockServer extends BedrockServer {
     protected final EventLoopGroup eventLoopGroup;
     private final BedrockServer original;
 
-    public LocalBedrockServer(BedrockServer original) {
+    public ReversionBedrockServer(BedrockServer original) {
         super(original.getBindAddress(), 1, EventLoops.commonGroup());
 
         this.original = original;
         eventLoopGroup = EventLoops.commonGroup();
-        getRakNet().setListener(new LocalServerListener(getRakNet().getListener()));
-        setHandler(new LocalServerEventHandler(original.getHandler()));
+        getRakNet().setListener(new ReversionServerListener(getRakNet().getListener()));
+        setHandler(new ReversionServerEventHandler(original.getHandler()));
     }
 
     @ParametersAreNonnullByDefault
-    protected static class LocalServerEventHandler implements BedrockServerEventHandler {
+    protected static class ReversionServerEventHandler implements BedrockServerEventHandler {
         private final BedrockServerEventHandler original;
 
-        public LocalServerEventHandler(BedrockServerEventHandler original) {
+        public ReversionServerEventHandler(BedrockServerEventHandler original) {
             this.original = original;
         }
 
@@ -82,6 +82,9 @@ public class LocalBedrockServer extends BedrockServer {
         @Override
         public void onSessionCreation(BedrockServerSession bedrockServerSession) {
             original.onSessionCreation(bedrockServerSession);
+
+            // Set codec to Compatibility mode whilst we work out the version
+            bedrockServerSession.setPacketCodec(BedrockCompat.COMPAT_CODEC);
         }
 
         @Override
@@ -92,10 +95,10 @@ public class LocalBedrockServer extends BedrockServer {
     }
 
     @ParametersAreNonnullByDefault
-    protected class LocalServerListener implements RakNetServerListener {
+    protected class ReversionServerListener implements RakNetServerListener {
         private final RakNetServerListener original;
 
-        public LocalServerListener(RakNetServerListener original) {
+        public ReversionServerListener(RakNetServerListener original) {
             this.original = original;
         }
 
@@ -111,10 +114,8 @@ public class LocalBedrockServer extends BedrockServer {
 
         @Override
         public void onSessionCreation(RakNetServerSession connection) {
-
-
             BedrockWrapperSerializer serializer = BedrockWrapperSerializers.getSerializer(connection.getProtocolVersion());
-            BedrockServerSession session = new LocalBedrockServerSession(connection, LocalBedrockServer.this.eventLoopGroup.next(), serializer);
+            BedrockServerSession session = new ReversionServerSession(connection, ReversionBedrockServer.this.eventLoopGroup.next(), serializer);
 
             BedrockRakNetSessionListener.Server server;
             try {
@@ -122,7 +123,7 @@ public class LocalBedrockServer extends BedrockServer {
                         .getDeclaredConstructor(BedrockServerSession.class, RakNetSession.class, BedrockServer.class);
 
                 constructor.setAccessible(true);
-                server = constructor.newInstance(session, connection, LocalBedrockServer.this);
+                server = constructor.newInstance(session, connection, ReversionBedrockServer.this);
             } catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
                 e.printStackTrace();
                 connection.disconnect(DisconnectReason.CLOSED_BY_REMOTE_PEER);

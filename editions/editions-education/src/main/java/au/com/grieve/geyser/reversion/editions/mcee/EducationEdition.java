@@ -16,37 +16,54 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package au.com.grieve.geyser.reversion.versions.mcee;
+package au.com.grieve.geyser.reversion.editions.mcee;
 
 import au.com.grieve.geyser.reversion.api.BaseEdition;
-import au.com.grieve.geyser.reversion.versions.mcee.commands.EducationCommand;
-import au.com.grieve.geyser.reversion.versions.mcee.hook.LocalBedrockServer;
-import au.com.grieve.geyser.reversion.versions.mcee.utils.TokenManager;
+import au.com.grieve.geyser.reversion.editions.mcee.commands.EducationCommand;
+import au.com.grieve.geyser.reversion.editions.mcee.hook.ReversionBedrockServer;
+import au.com.grieve.geyser.reversion.editions.mcee.translators.v390_v407.Translator;
+import au.com.grieve.geyser.reversion.editions.mcee.utils.TokenManager;
 import com.nukkitx.protocol.bedrock.BedrockServer;
+import lombok.Getter;
 import org.geysermc.connector.GeyserConnector;
 import org.geysermc.connector.event.annotations.GeyserEventHandler;
 import org.geysermc.connector.event.events.geyser.GeyserStartEvent;
 import org.geysermc.connector.plugin.GeyserPlugin;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Provides support for Minecraft Educational Edition
  */
+@Getter
 public class EducationEdition extends BaseEdition {
+    @Getter
+    private static EducationEdition instance;
+
+    private final Map<Integer, Class<? extends BaseTranslator>> translators = new HashMap<>();
+    private final List<BaseTranslator> activeTranslators = new ArrayList<>();
 
     private final TokenManager tokenManager;
 
     public EducationEdition(GeyserPlugin plugin) {
         super(plugin);
 
+        instance = this;
         tokenManager = new TokenManager(plugin);
         getPlugin().registerEvents(this);
+
+        // Register Translators
+        registerTranslator(390, Translator.class);
     }
 
     @Override
     public BedrockServer hook(BedrockServer bedrockServer) {
         // Hook into Bedrock Server
         getPlugin().getLogger().debug("[Education]: Hooking into BedrockServer");
-        return new LocalBedrockServer(bedrockServer);
+        return new ReversionBedrockServer(bedrockServer);
     }
 
     @GeyserEventHandler
@@ -54,5 +71,9 @@ public class EducationEdition extends BaseEdition {
         // Register Education command
         GeyserConnector.getInstance().getBootstrap().getGeyserCommandManager().registerCommand(
                 new EducationCommand("education", "Education Commands", "geyser.command.education", tokenManager));
+    }
+
+    public void registerTranslator(int protocolVersion, Class<? extends BaseTranslator> cls) {
+        translators.put(protocolVersion, cls);
     }
 }

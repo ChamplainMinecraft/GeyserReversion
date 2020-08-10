@@ -16,9 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package au.com.grieve.geyser.reversion.versions.mcee.commands;
+package au.com.grieve.geyser.reversion.editions.mcee.commands;
 
-import au.com.grieve.geyser.reversion.versions.mcee.utils.TokenManager;
+import au.com.grieve.geyser.reversion.editions.mcee.utils.TokenManager;
 import org.geysermc.connector.command.CommandSender;
 import org.geysermc.connector.command.GeyserCommand;
 import org.geysermc.connector.common.ChatColor;
