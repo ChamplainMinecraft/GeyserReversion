@@ -16,27 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package au.com.grieve.geyser.reversion.editions.mcee;
+package au.com.grieve.geyser.reversion.editions.mcee.exceptions;
 
-import com.nukkitx.protocol.bedrock.BedrockPacket;
-import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import org.geysermc.connector.network.session.GeyserSession;
-
-@Getter
-@RequiredArgsConstructor
-public abstract class BaseTranslator {
-    private final GeyserSession session;
-
-    public abstract BedrockPacketCodec getCodec();
-
-    public abstract boolean receiveUpstream(BedrockPacket packet);
-
-    public abstract boolean receiveDownstream(BedrockPacket packet);
-
-    public abstract void sendUpstream(BedrockPacket packet);
-
-    public abstract void sendDownstream(BedrockPacket packet);
-
+public class TranslatorException extends Exception {
+    public TranslatorException(Throwable e) {
+        super(e);
+    }
 }

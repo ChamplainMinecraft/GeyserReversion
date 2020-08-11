@@ -18,9 +18,12 @@
 
 package au.com.grieve.geyser.reversion.editions.mcee.hook;
 
-import au.com.grieve.geyser.reversion.editions.mcee.BaseTranslator;
+import au.com.grieve.geyser.reversion.api.BaseTranslator;
+import au.com.grieve.geyser.reversion.api.UpstreamSession;
 import au.com.grieve.geyser.reversion.editions.mcee.EducationEdition;
+import au.com.grieve.geyser.reversion.editions.mcee.exceptions.TranslatorException;
 import com.nukkitx.network.raknet.RakNetSession;
+import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
@@ -28,16 +31,19 @@ import com.nukkitx.protocol.bedrock.wrapper.BedrockWrapperSerializer;
 import io.netty.channel.EventLoop;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.geysermc.connector.GeyserConnector;
+import org.geysermc.connector.network.session.GeyserSession;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 
 @Getter
-public class ReversionServerSession extends BedrockServerSession {
+public class ReversionServerSession extends BedrockServerSession implements UpstreamSession {
 
-    private List<BaseTranslator> translators = new ArrayList<>();
+    @Setter
+    private GeyserSession geyserSession;
+
+    private BaseTranslator translator;
 
     public ReversionServerSession(RakNetSession connection, EventLoop eventLoop, BedrockWrapperSerializer serializer) {
         super(connection, eventLoop, serializer);
@@ -48,24 +54,36 @@ public class ReversionServerSession extends BedrockServerSession {
         setBatchHandler(batchHandler);
     }
 
+    @Override
+    public void sendPacketDirect(BedrockPacket packet) {
+        super.sendPacket(packet);
+    }
+
+    @Override
+    public void sendWrapped(Collection<BedrockPacket> packets, boolean encrypt) {
+        for (BedrockPacket packet : packets) {
+            translator.sendUpstream(packet);
+        }
+    }
+
     @Getter
     @RequiredArgsConstructor
     public class VersionDetectPacketHandler implements BedrockPacketHandler {
 
         @Override
         public boolean handle(LoginPacket packet) {
-            Class<? extends BaseTranslator> translatorClass = EducationEdition.getInstance().getTranslators().get(packet.getProtocolVersion());
-            if (translatorClass != null) {
-                try {
-                    translator = translatorClass.getConstructor(ReversionServerSession.class).newInstance(ReversionServerSession.this);
-                    EducationEdition.getInstance().getPlugin().getLogger().debug("Player connected with version: " + translator.getCodec().getMinecraftVersion());
-                } catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-                    EducationEdition.getInstance().getPlugin().getLogger().error("Failed to load translator", e);
-                }
+            try {
+                translator = EducationEdition.getInstance().createTranslator(
+                        packet.getProtocolVersion(), GeyserConnector.BEDROCK_PACKET_CODEC.getProtocolVersion(), geyserSession);
+                EducationEdition.getInstance().getPlugin().getLogger().debug("Player connected with version: " + translator.getCodec().getMinecraftVersion());
+                setPacketCodec(translator.getCodec());
+                return false;
+            } catch (TranslatorException e) {
+                EducationEdition.getInstance().getPlugin().getLogger().error("Failed to load Version Translation", e);
             }
 
-            // Unknown Version. We will set the current codec and pass on so it can handle errors
-            System.err.println("Unknown so setting codec");
+            // Unknown Version. We will set the current codec and pass on instead
+            System.err.println("Unknown version so assuming latest");
             setPacketCodec(GeyserConnector.BEDROCK_PACKET_CODEC);
             return false;
         }

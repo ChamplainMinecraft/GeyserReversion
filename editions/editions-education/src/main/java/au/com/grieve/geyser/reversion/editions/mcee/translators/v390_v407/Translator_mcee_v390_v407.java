@@ -18,7 +18,8 @@
 
 package au.com.grieve.geyser.reversion.editions.mcee.translators.v390_v407;
 
-import au.com.grieve.geyser.reversion.editions.mcee.BaseTranslator;
+import au.com.grieve.geyser.reversion.api.BaseTranslator;
+import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.v390.Bedrock_v390;
@@ -26,17 +27,32 @@ import lombok.Getter;
 import org.geysermc.connector.network.session.GeyserSession;
 
 @Getter
-public class Translator extends BaseTranslator {
+public class Translator_mcee_v390_v407 extends BaseTranslator {
     private final BedrockPacketCodec codec = Bedrock_v390.V390_CODEC;
 
     private final BedrockPacketHandler upstreamPacketHandler;
     private final BedrockPacketHandler downstreamPacketHandler;
 
-    public Translator(GeyserSession session) {
+    public Translator_mcee_v390_v407(GeyserSession session) {
         super(session);
 
         upstreamPacketHandler = new UpstreamPacketHandler(this);
         downstreamPacketHandler = new DownstreamPacketHandler(this);
     }
 
+    @Override
+    public boolean receiveUpstream(BedrockPacket packet) {
+        if (packet.handle(upstreamPacketHandler)) {
+            return true;
+        }
+        return super.receiveUpstream(packet);
+    }
+
+    @Override
+    public boolean receiveDownstream(BedrockPacket packet) {
+        if (packet.handle(downstreamPacketHandler)) {
+            return true;
+        }
+        return super.receiveDownstream(packet);
+    }
 }

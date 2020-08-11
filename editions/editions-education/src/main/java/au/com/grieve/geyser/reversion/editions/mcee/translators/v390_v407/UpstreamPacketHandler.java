@@ -30,10 +30,11 @@ import org.geysermc.connector.GeyserConnector;
 @Getter
 @RequiredArgsConstructor
 public class UpstreamPacketHandler implements BedrockPacketHandler {
-    private final Translator translator;
+    private final Translator_mcee_v390_v407 translator;
 
     @Override
     public boolean handle(LoginPacket packet) {
+        System.err.println(packet);
         MCEELoginEncryptionUtils.encryptPlayerConnection(GeyserConnector.getInstance(), translator.getSession(), packet);
 
         PlayStatusPacket playStatus = new PlayStatusPacket();

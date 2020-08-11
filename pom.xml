@@ -28,6 +28,7 @@
     <modules>
         <module>geyser-reversion</module>
         <module>editions</module>
+        <module>common</module>
     </modules>
     <packaging>pom</packaging>
 

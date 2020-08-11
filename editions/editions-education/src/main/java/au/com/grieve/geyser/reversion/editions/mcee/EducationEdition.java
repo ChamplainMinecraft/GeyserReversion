@@ -19,21 +19,24 @@
 package au.com.grieve.geyser.reversion.editions.mcee;
 
 import au.com.grieve.geyser.reversion.api.BaseEdition;
+import au.com.grieve.geyser.reversion.api.BaseTranslator;
 import au.com.grieve.geyser.reversion.editions.mcee.commands.EducationCommand;
+import au.com.grieve.geyser.reversion.editions.mcee.exceptions.TranslatorException;
 import au.com.grieve.geyser.reversion.editions.mcee.hook.ReversionBedrockServer;
-import au.com.grieve.geyser.reversion.editions.mcee.translators.v390_v407.Translator;
+import au.com.grieve.geyser.reversion.editions.mcee.translators.v390_v407.Translator_mcee_v390_v407;
 import au.com.grieve.geyser.reversion.editions.mcee.utils.TokenManager;
 import com.nukkitx.protocol.bedrock.BedrockServer;
 import lombok.Getter;
+import lombok.Value;
 import org.geysermc.connector.GeyserConnector;
 import org.geysermc.connector.event.annotations.GeyserEventHandler;
 import org.geysermc.connector.event.events.geyser.GeyserStartEvent;
+import org.geysermc.connector.network.session.GeyserSession;
 import org.geysermc.connector.plugin.GeyserPlugin;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Provides support for Minecraft Educational Edition
@@ -43,8 +46,7 @@ public class EducationEdition extends BaseEdition {
     @Getter
     private static EducationEdition instance;
 
-    private final Map<Integer, Class<? extends BaseTranslator>> translators = new HashMap<>();
-    private final List<BaseTranslator> activeTranslators = new ArrayList<>();
+    private final List<TranslatorDefinition> translators = new ArrayList<>();
 
     private final TokenManager tokenManager;
 
@@ -56,7 +58,7 @@ public class EducationEdition extends BaseEdition {
         getPlugin().registerEvents(this);
 
         // Register Translators
-        registerTranslator(390, Translator.class);
+        registerTranslator(Translator_mcee_v390_v407.class, 390, 407);
     }
 
     @Override
@@ -73,7 +75,65 @@ public class EducationEdition extends BaseEdition {
                 new EducationCommand("education", "Education Commands", "geyser.command.education", tokenManager));
     }
 
-    public void registerTranslator(int protocolVersion, Class<? extends BaseTranslator> cls) {
-        translators.put(protocolVersion, cls);
+    public void registerTranslator(Class<? extends BaseTranslator> translatorClass, int protocolVersionFrom, int protocolVersionTo) {
+        translators.add(new TranslatorDefinition(translatorClass, protocolVersionFrom, protocolVersionTo));
+    }
+
+    /**
+     * Attempt to create a translator chain between the specific versions
+     *
+     * @param protocolVersionFrom version to translate from client
+     * @param protocolVersionTo   version to translate to server
+     * @param session             the Geyser session
+     * @return start of Translator chain else null
+     */
+    public BaseTranslator createTranslator(int protocolVersionFrom, int protocolVersionTo, GeyserSession session) throws TranslatorException {
+        // For now we assume we have a single translator that fits
+        for (TranslatorDefinition definition : translators) {
+            if (definition.getProtocolVersionFrom() == protocolVersionFrom && definition.getProtocolVersionTo() == protocolVersionTo) {
+                try {
+                    return definition.getTranslatorClass().getConstructor(GeyserSession.class).newInstance(session);
+                } catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+                    throw new TranslatorException(e);
+                }
+            }
+        }
+        // No translator found so return the default
+        try {
+            return BaseTranslator.DefaultTranslator.class.getConstructor(GeyserSession.class).newInstance(session);
+        } catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            throw new TranslatorException(e);
+        }
+    }
+
+//    private List<TranslatorDefinition> findShortestTranslatorChain(int protocolVersionFrom, int protocolVersionTo, List<TranslatorDefinition> definitions) {
+//        List<TranslatorDefinition> best = new ArrayList<>();
+//        for (TranslatorDefinition definition : definitions) {
+//            if (definition.getProtocolVersionFrom() == protocolVersionFrom) {
+//                if (definition.getProtocolVersionTo() == protocolVersionTo) {
+//                    return Collections.singletonList(definition);
+//                }
+//
+//                List<TranslatorDefinition> test = findShortestTranslatorChain(definition.getProtocolVersionTo(), protocolVersionTo, definitions.stream()
+//                        .filter(d -> d != definition)
+//                        .collect(Collectors.toList())
+//                );
+//
+//                if (test == null || test.size() < best.size()-1) {
+//                    continue;
+//                }
+//
+//
+//
+//            }
+//        }
+//    }
+
+    @Value
+    public static class TranslatorDefinition {
+        Class<? extends BaseTranslator> translatorClass;
+        int protocolVersionFrom;
+        int protocolVersionTo;
+
     }
 }

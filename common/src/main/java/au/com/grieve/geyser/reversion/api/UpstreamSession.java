@@ -16,14 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package au.com.grieve.geyser.reversion.editions.mcee.translators.v390_v407;
+package au.com.grieve.geyser.reversion.api;
 
-import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import com.nukkitx.protocol.bedrock.BedrockPacket;
 
-@Getter
-@RequiredArgsConstructor
-public class DownstreamPacketHandler implements BedrockPacketHandler {
-    private final Translator_mcee_v390_v407 translator;
+public interface UpstreamSession {
+
+    void sendPacketDirect(BedrockPacket packet);
 }

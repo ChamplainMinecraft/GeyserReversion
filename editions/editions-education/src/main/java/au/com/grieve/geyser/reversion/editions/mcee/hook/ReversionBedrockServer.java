@@ -83,13 +83,8 @@ public class ReversionBedrockServer extends BedrockServer {
         }
 
         @Override
-        public void onSessionCreation(BedrockServerSession bedrockServerSession) {
-            GeyserSession session = new GeyserSession(GeyserConnector.getInstance(), bedrockServerSession);
-
-            bedrockServerSession.setLogging(true);
-            bedrockServerSession.setPacketHandler(new UpstreamPacketHandler(GeyserConnector.getInstance(), session));
-            bedrockServerSession.setPacketCodec(BedrockCompat.COMPAT_CODEC);
-
+        public void onSessionCreation(BedrockServerSession bedrockSession) {
+            // Handled Elsewhere
         }
 
         @Override
@@ -120,7 +115,7 @@ public class ReversionBedrockServer extends BedrockServer {
         @Override
         public void onSessionCreation(RakNetServerSession connection) {
             BedrockWrapperSerializer serializer = BedrockWrapperSerializers.getSerializer(connection.getProtocolVersion());
-            BedrockServerSession session = new ReversionServerSession(connection, ReversionBedrockServer.this.eventLoopGroup.next(), serializer);
+            ReversionServerSession bedrockSession = new ReversionServerSession(connection, ReversionBedrockServer.this.eventLoopGroup.next(), serializer);
 
             BedrockRakNetSessionListener.Server server;
             try {
@@ -128,7 +123,7 @@ public class ReversionBedrockServer extends BedrockServer {
                         .getDeclaredConstructor(BedrockServerSession.class, RakNetSession.class, BedrockServer.class);
 
                 constructor.setAccessible(true);
-                server = constructor.newInstance(session, connection, ReversionBedrockServer.this);
+                server = constructor.newInstance(bedrockSession, connection, ReversionBedrockServer.this);
             } catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
                 e.printStackTrace();
                 connection.disconnect(DisconnectReason.CLOSED_BY_REMOTE_PEER);
@@ -136,6 +131,13 @@ public class ReversionBedrockServer extends BedrockServer {
             }
 
             connection.setListener(server);
+
+            GeyserSession session = new GeyserSession(GeyserConnector.getInstance(), bedrockSession);
+            bedrockSession.setGeyserSession(session);
+
+            bedrockSession.setLogging(true);
+            bedrockSession.setPacketHandler(new UpstreamPacketHandler(GeyserConnector.getInstance(), session));
+            bedrockSession.setPacketCodec(BedrockCompat.COMPAT_CODEC);
         }
 
         @Override

@@ -18,6 +18,7 @@
 
 package au.com.grieve.geyser.reversion.editions.mcee.hook;
 
+import au.com.grieve.geyser.reversion.api.BaseTranslator;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BatchHandler;
@@ -59,10 +60,9 @@ public class ReversionBatchHandler implements BatchHandler {
             }
 
             if (session instanceof ReversionServerSession) {
-                for (BedrockPacketHandler handler : ((ReversionServerSession) session).getTranslators()) {
-                    if (packet.handle(handler)) {
-                        return;
-                    }
+                BaseTranslator translator = ((ReversionServerSession) session).getTranslator();
+                if (translator != null && translator.receiveUpstream(packet)) {
+                    return;
                 }
             }
 
