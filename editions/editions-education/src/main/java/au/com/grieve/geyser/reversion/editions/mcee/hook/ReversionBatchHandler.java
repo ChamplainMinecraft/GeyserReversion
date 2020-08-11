@@ -45,8 +45,6 @@ public class ReversionBatchHandler implements BatchHandler {
 
     private final ConcurrentLinkedDeque<BedrockPacketHandler> packetHandlers = new ConcurrentLinkedDeque<>();
 
-    private final ReversionServerSession serverSession;
-
     @Override
     public void handle(BedrockSession session, ByteBuf compressed, Collection<BedrockPacket> packets) {
         for (BedrockPacket packet : packets) {
@@ -60,14 +58,15 @@ public class ReversionBatchHandler implements BatchHandler {
                 }
             }
 
-            if (serverSession.getTranslator() != null) {
-                if (serverSession.getTranslator().handleUpstream(packet)) {
-                    return;
+            if (session instanceof ReversionServerSession) {
+                for (BedrockPacketHandler handler : ((ReversionServerSession) session).getTranslators()) {
+                    if (packet.handle(handler)) {
+                        return;
+                    }
                 }
             }
 
             BedrockPacketHandler handler = session.getPacketHandler();
-            System.err.println("here: " + handler);
             if (handler == null || !packet.handle(handler)) {
                 log.debug("Unhandled packet for {}: {}", session.getAddress(), packet);
             }

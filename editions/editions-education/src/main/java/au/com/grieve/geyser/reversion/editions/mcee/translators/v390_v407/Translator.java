@@ -19,12 +19,11 @@
 package au.com.grieve.geyser.reversion.editions.mcee.translators.v390_v407;
 
 import au.com.grieve.geyser.reversion.editions.mcee.BaseTranslator;
-import au.com.grieve.geyser.reversion.editions.mcee.hook.ReversionServerSession;
-import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.v390.Bedrock_v390;
 import lombok.Getter;
+import org.geysermc.connector.network.session.GeyserSession;
 
 @Getter
 public class Translator extends BaseTranslator {
@@ -33,20 +32,11 @@ public class Translator extends BaseTranslator {
     private final BedrockPacketHandler upstreamPacketHandler;
     private final BedrockPacketHandler downstreamPacketHandler;
 
-    public Translator(ReversionServerSession session) {
+    public Translator(GeyserSession session) {
         super(session);
 
         upstreamPacketHandler = new UpstreamPacketHandler(this);
         downstreamPacketHandler = new DownstreamPacketHandler(this);
     }
 
-    @Override
-    public boolean handleUpstream(BedrockPacket packet) {
-        return packet.handle(upstreamPacketHandler);
-    }
-
-    @Override
-    public boolean handleDownstream(BedrockPacket packet) {
-        return packet.handle(downstreamPacketHandler);
-    }
 }

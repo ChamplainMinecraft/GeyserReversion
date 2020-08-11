@@ -18,21 +18,25 @@
 
 package au.com.grieve.geyser.reversion.editions.mcee;
 
-import au.com.grieve.geyser.reversion.editions.mcee.hook.ReversionServerSession;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.geysermc.connector.network.session.GeyserSession;
 
 @Getter
 @RequiredArgsConstructor
 public abstract class BaseTranslator {
-    private final ReversionServerSession session;
-
+    private final GeyserSession session;
 
     public abstract BedrockPacketCodec getCodec();
 
-    public abstract boolean handleUpstream(BedrockPacket packet);
+    public abstract boolean receiveUpstream(BedrockPacket packet);
 
-    public abstract boolean handleDownstream(BedrockPacket packet);
+    public abstract boolean receiveDownstream(BedrockPacket packet);
+
+    public abstract void sendUpstream(BedrockPacket packet);
+
+    public abstract void sendDownstream(BedrockPacket packet);
+
 }

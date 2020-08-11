@@ -18,10 +18,14 @@
 
 package au.com.grieve.geyser.reversion.editions.mcee.translators.v390_v407;
 
+import au.com.grieve.geyser.reversion.editions.mcee.utils.MCEELoginEncryptionUtils;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
+import com.nukkitx.protocol.bedrock.packet.PlayStatusPacket;
+import com.nukkitx.protocol.bedrock.packet.ResourcePacksInfoPacket;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.geysermc.connector.GeyserConnector;
 
 @Getter
 @RequiredArgsConstructor
@@ -30,7 +34,14 @@ public class UpstreamPacketHandler implements BedrockPacketHandler {
 
     @Override
     public boolean handle(LoginPacket packet) {
-        System.err.println("HERE");
-        return false;
+        MCEELoginEncryptionUtils.encryptPlayerConnection(GeyserConnector.getInstance(), translator.getSession(), packet);
+
+        PlayStatusPacket playStatus = new PlayStatusPacket();
+        playStatus.setStatus(PlayStatusPacket.Status.LOGIN_SUCCESS);
+        translator.sendUpstream(playStatus);
+
+        ResourcePacksInfoPacket resourcePacksInfo = new ResourcePacksInfoPacket();
+        translator.sendUpstream(resourcePacksInfo);
+        return true;
     }
 }

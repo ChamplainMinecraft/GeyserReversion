@@ -35,6 +35,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.DatagramPacket;
 import lombok.Getter;
+import org.geysermc.connector.GeyserConnector;
+import org.geysermc.connector.network.UpstreamPacketHandler;
+import org.geysermc.connector.network.session.GeyserSession;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.reflect.Constructor;
@@ -81,10 +84,12 @@ public class ReversionBedrockServer extends BedrockServer {
 
         @Override
         public void onSessionCreation(BedrockServerSession bedrockServerSession) {
-            original.onSessionCreation(bedrockServerSession);
+            GeyserSession session = new GeyserSession(GeyserConnector.getInstance(), bedrockServerSession);
 
-            // Set codec to Compatibility mode whilst we work out the version
+            bedrockServerSession.setLogging(true);
+            bedrockServerSession.setPacketHandler(new UpstreamPacketHandler(GeyserConnector.getInstance(), session));
             bedrockServerSession.setPacketCodec(BedrockCompat.COMPAT_CODEC);
+
         }
 
         @Override

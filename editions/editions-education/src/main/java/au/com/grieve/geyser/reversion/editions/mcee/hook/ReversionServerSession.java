@@ -31,17 +31,19 @@ import lombok.RequiredArgsConstructor;
 import org.geysermc.connector.GeyserConnector;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 public class ReversionServerSession extends BedrockServerSession {
 
-    private BaseTranslator translator;
+    private List<BaseTranslator> translators = new ArrayList<>();
 
     public ReversionServerSession(RakNetSession connection, EventLoop eventLoop, BedrockWrapperSerializer serializer) {
         super(connection, eventLoop, serializer);
 
-        ReversionBatchHandler batchHandler = new ReversionBatchHandler(this);
-        batchHandler.getPacketHandlers().add(new VersionDetectPacketHandler(batchHandler));
+        ReversionBatchHandler batchHandler = new ReversionBatchHandler();
+        batchHandler.getPacketHandlers().add(new VersionDetectPacketHandler());
 
         setBatchHandler(batchHandler);
     }
@@ -49,7 +51,6 @@ public class ReversionServerSession extends BedrockServerSession {
     @Getter
     @RequiredArgsConstructor
     public class VersionDetectPacketHandler implements BedrockPacketHandler {
-        private final ReversionBatchHandler batchHandler;
 
         @Override
         public boolean handle(LoginPacket packet) {
