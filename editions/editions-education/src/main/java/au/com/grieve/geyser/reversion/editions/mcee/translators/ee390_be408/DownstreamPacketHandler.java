@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package au.com.grieve.geyser.reversion.editions.mcee.translators.v390_v407;
+package au.com.grieve.geyser.reversion.editions.mcee.translators.ee390_be408;
 
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import lombok.Getter;
@@ -25,5 +25,5 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public class DownstreamPacketHandler implements BedrockPacketHandler {
-    private final Translator_mcee_v390_v407 translator;
+    private final Translator_ee390_be408 translator;
 }

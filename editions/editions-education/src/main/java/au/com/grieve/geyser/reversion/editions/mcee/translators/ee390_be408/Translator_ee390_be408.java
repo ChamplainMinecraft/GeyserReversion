@@ -16,8 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package au.com.grieve.geyser.reversion.editions.mcee.translators.v390_v407;
+package au.com.grieve.geyser.reversion.editions.mcee.translators.ee390_be408;
 
+import au.com.grieve.geyser.reversion.ReversionManager;
 import au.com.grieve.geyser.reversion.api.BaseTranslator;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
@@ -27,14 +28,14 @@ import lombok.Getter;
 import org.geysermc.connector.network.session.GeyserSession;
 
 @Getter
-public class Translator_mcee_v390_v407 extends BaseTranslator {
+public class Translator_ee390_be408 extends BaseTranslator {
     private final BedrockPacketCodec codec = Bedrock_v390.V390_CODEC;
 
     private final BedrockPacketHandler upstreamPacketHandler;
     private final BedrockPacketHandler downstreamPacketHandler;
 
-    public Translator_mcee_v390_v407(GeyserSession session) {
-        super(session);
+    public Translator_ee390_be408(ReversionManager manager, GeyserSession session) {
+        super(manager, session);
 
         upstreamPacketHandler = new UpstreamPacketHandler(this);
         downstreamPacketHandler = new DownstreamPacketHandler(this);

@@ -18,19 +18,25 @@
 
 package au.com.grieve.geyser.reversion.server;
 
+import au.com.grieve.geyser.reversion.ReversionManager;
 import au.com.grieve.geyser.reversion.api.BaseTranslator;
+import au.com.grieve.geyser.reversion.api.TranslatorException;
 import com.nukkitx.network.raknet.RakNetSession;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
+import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
+import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import com.nukkitx.protocol.bedrock.wrapper.BedrockWrapperSerializer;
 import io.netty.channel.EventLoop;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.geysermc.connector.network.session.GeyserSession;
 
-import java.util.Collection;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 @Getter
+@ParametersAreNonnullByDefault
 public class ReversionServerSession extends BedrockServerSession {
 
     @Setter
@@ -42,6 +48,7 @@ public class ReversionServerSession extends BedrockServerSession {
         super(connection, eventLoop, serializer);
 
         ReversionBatchHandler batchHandler = new ReversionBatchHandler();
+        batchHandler.getPacketHandlers().add(new VersionDetectPacketHandler());
         setBatchHandler(batchHandler);
     }
 
@@ -50,9 +57,25 @@ public class ReversionServerSession extends BedrockServerSession {
     }
 
     @Override
-    public void sendWrapped(Collection<BedrockPacket> packets, boolean encrypt) {
-        for (BedrockPacket packet : packets) {
-            translator.getLast().sendUpstream(packet);
+    public void sendPacket(BedrockPacket packet) {
+        translator.getLast().sendUpstream(packet);
+    }
+
+    @Getter
+    @RequiredArgsConstructor
+    public class VersionDetectPacketHandler implements BedrockPacketHandler {
+
+        @Override
+        public boolean handle(LoginPacket packet) {
+            try {
+                translator = ReversionManager.getInstance().createTranslatorChain(packet.getProtocolVersion(), geyserSession);
+                ReversionManager.getInstance().getPlugin().getLogger().debug("Player connected with version: " + translator.getCodec().getMinecraftVersion());
+                setPacketCodec(translator.getCodec());
+                return false;
+            } catch (TranslatorException e) {
+                ReversionManager.getInstance().getPlugin().getLogger().error("Failed to load Version Translation", e);
+            }
+            return false;
         }
     }
 }

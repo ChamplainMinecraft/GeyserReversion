@@ -22,6 +22,7 @@ import au.com.grieve.geyser.reversion.ReversionManager;
 import au.com.grieve.geyser.reversion.api.BaseEdition;
 import au.com.grieve.geyser.reversion.editions.mcee.commands.EducationCommand;
 import au.com.grieve.geyser.reversion.editions.mcee.server.EducationServerEventHandler;
+import au.com.grieve.geyser.reversion.editions.mcee.translators.ee390_be408.Translator_ee390_be408;
 import au.com.grieve.geyser.reversion.editions.mcee.utils.TokenManager;
 import au.com.grieve.geyser.reversion.server.ReversionServerEventHandler;
 import lombok.Getter;
@@ -56,6 +57,7 @@ public class EducationEdition extends BaseEdition {
     }
 
     public void registerTranslators() {
+        manager.registerTranslator("education", 390, "bedrock", 408, Translator_ee390_be408.class);
 
     }
 

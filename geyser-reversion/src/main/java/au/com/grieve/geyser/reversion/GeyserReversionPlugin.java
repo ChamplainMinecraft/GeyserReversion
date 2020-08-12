@@ -83,28 +83,4 @@ public class GeyserReversionPlugin extends GeyserPlugin {
         }
         config = Configuration.loadFromFile(configFile);
     }
-
-//    @Getter
-//    @RequiredArgsConstructor
-//    public class VersionDetectPacketHandler implements BedrockPacketHandler {
-//
-//        @Override
-//        public boolean handle(LoginPacket packet) {
-//            try {
-//                translator = GeyserReversion.getInstance().createTranslatorChain(packet.getProtocolVersion(), geyserSession);
-//                EducationEdition.getInstance().getPlugin().getLogger().debug("Player connected with version: " + translator.getCodec().getMinecraftVersion());
-//                setPacketCodec(translator.getCodec());
-//                return false;
-//            } catch (TranslatorException e) {
-//                EducationEdition.getInstance().getPlugin().getLogger().error("Failed to load Version Translation", e);
-//            }
-//            return false;
-//        }
-//    }
-
-
-
-
-
-
 }

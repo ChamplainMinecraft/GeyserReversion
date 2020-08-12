@@ -43,8 +43,8 @@ public class ReversionManager {
     @Getter
     private static ReversionManager instance;
 
-    public final Map<String, BaseEdition> registeredEditions = new HashMap<>();
-    public final List<RegisteredTranslator> registeredTranslators = new ArrayList<>();
+    private final Map<String, BaseEdition> registeredEditions = new HashMap<>();
+    private final List<RegisteredTranslator> registeredTranslators = new ArrayList<>();
 
     private final GeyserPlugin plugin;
     private final String editionName;

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package au.com.grieve.geyser.reversion.editions.mcee.translators.v390_v407;
+package au.com.grieve.geyser.reversion.editions.mcee.translators.ee390_be408;
 
 import au.com.grieve.geyser.reversion.editions.mcee.utils.MCEELoginEncryptionUtils;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
@@ -30,7 +30,7 @@ import org.geysermc.connector.GeyserConnector;
 @Getter
 @RequiredArgsConstructor
 public class UpstreamPacketHandler implements BedrockPacketHandler {
-    private final Translator_mcee_v390_v407 translator;
+    private final Translator_ee390_be408 translator;
 
     @Override
     public boolean handle(LoginPacket packet) {

@@ -18,6 +18,7 @@
 
 package au.com.grieve.geyser.reversion.api;
 
+import au.com.grieve.geyser.reversion.ReversionManager;
 import au.com.grieve.geyser.reversion.server.ReversionServerSession;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
@@ -40,6 +41,7 @@ public abstract class BaseTranslator {
     @Setter
     public BaseTranslator previous;
 
+    private final ReversionManager manager;
     private final GeyserSession session;
 
     public abstract BedrockPacketCodec getCodec();
@@ -66,7 +68,7 @@ public abstract class BaseTranslator {
     }
 
     public boolean sendUpstream(BedrockPacket packet) {
-        // Try pass to next in chain
+        // Try pass to previous in chain
         if (previous != null) {
             return previous.receiveDownstream(packet);
         }
@@ -78,7 +80,7 @@ public abstract class BaseTranslator {
     }
 
     public boolean sendDownstream(BedrockPacket packet) {
-        // Try pass to previous in chain
+        // Try pass to next in chain
         if (next != null) {
             return next.receiveUpstream(packet);
         }
