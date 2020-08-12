@@ -23,8 +23,10 @@ import au.com.grieve.geyser.reversion.api.BaseTranslator;
 import au.com.grieve.geyser.reversion.api.TranslatorException;
 import au.com.grieve.geyser.reversion.editions.mcee.commands.EducationCommand;
 import au.com.grieve.geyser.reversion.editions.mcee.hook.ReversionBedrockServer;
+import au.com.grieve.geyser.reversion.editions.mcee.server.EducationServerEventHandler;
 import au.com.grieve.geyser.reversion.editions.mcee.translators.v390_v407.Translator_mcee_v390_v407;
 import au.com.grieve.geyser.reversion.editions.mcee.utils.TokenManager;
+import au.com.grieve.geyser.reversion.server.ReversionServerEventHandler;
 import com.nukkitx.protocol.bedrock.BedrockServer;
 import lombok.Getter;
 import lombok.Value;
@@ -46,6 +48,8 @@ public class EducationEdition extends BaseEdition {
     @Getter
     private static EducationEdition instance;
 
+    private final ReversionServerEventHandler serverEventHandler;
+
     private final List<TranslatorDefinition> translators = new ArrayList<>();
 
     private final TokenManager tokenManager;
@@ -55,6 +59,7 @@ public class EducationEdition extends BaseEdition {
 
         instance = this;
         tokenManager = new TokenManager(plugin);
+        serverEventHandler = new EducationServerEventHandler(this);
         getPlugin().registerEvents(this);
 
         // Register Translators

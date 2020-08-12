@@ -18,9 +18,11 @@
 
 package au.com.grieve.geyser.reversion;
 
+import au.com.grieve.geyser.reversion.api.BaseEdition;
 import au.com.grieve.geyser.reversion.api.BaseTranslator;
 import au.com.grieve.geyser.reversion.api.TranslatorException;
 import au.com.grieve.geyser.reversion.config.Configuration;
+import au.com.grieve.geyser.reversion.editions.mcee.EducationEdition;
 import au.com.grieve.geyser.reversion.editions.mcee.commands.EducationCommand;
 import au.com.grieve.geyser.reversion.editions.mcee.utils.TokenManager;
 import au.com.grieve.geyser.reversion.server.ReversionServer;
@@ -44,7 +46,9 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Plugin(
@@ -58,6 +62,7 @@ public class GeyserReversion extends GeyserPlugin {
     @Getter
     private static GeyserReversion instance;
 
+    public final Map<String, BaseEdition> registeredEditions = new HashMap<>();
     public final List<RegisteredTranslator> registeredTranslators = new ArrayList<>();
 
     private final TokenManager tokenManager;
@@ -69,7 +74,16 @@ public class GeyserReversion extends GeyserPlugin {
         tokenManager = new TokenManager(this);
 
         loadConfig();
+        registerEditions();
         registerTranslators();
+    }
+
+    /**
+     * Register Default Editions
+     */
+    protected void registerEditions() {
+        registerEdition("education", new EducationEdition(this));
+
     }
 
     /**
@@ -84,6 +98,10 @@ public class GeyserReversion extends GeyserPlugin {
         registeredTranslators.add(
                 new RegisteredTranslator(fromEdition, fromProtocolVersion, toEdition, toProtocolVersion, translatorClass)
         );
+    }
+
+    public void registerEdition(String name, BaseEdition edition) {
+        registeredEditions.put(name, edition);
     }
 
     /**

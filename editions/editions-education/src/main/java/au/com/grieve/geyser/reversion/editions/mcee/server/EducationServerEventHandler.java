@@ -16,8 +16,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package au.com.grieve.geyser.reversion.editions.mcee;
+package au.com.grieve.geyser.reversion.editions.mcee.server;
+
+import au.com.grieve.geyser.reversion.server.ReversionServerEventHandler;
+import com.nukkitx.protocol.bedrock.BedrockServerEventHandler;
 
 public class EducationServerEventHandler extends ReversionServerEventHandler {
 
+    public EducationServerEventHandler(BedrockServerEventHandler original) {
+        super(original);
+    }
 }
