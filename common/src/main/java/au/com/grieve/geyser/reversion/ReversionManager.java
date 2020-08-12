@@ -21,28 +21,15 @@ package au.com.grieve.geyser.reversion;
 import au.com.grieve.geyser.reversion.api.BaseEdition;
 import au.com.grieve.geyser.reversion.api.BaseTranslator;
 import au.com.grieve.geyser.reversion.api.TranslatorException;
-import au.com.grieve.geyser.reversion.config.Configuration;
-import au.com.grieve.geyser.reversion.editions.mcee.EducationEdition;
-import au.com.grieve.geyser.reversion.editions.mcee.commands.EducationCommand;
-import au.com.grieve.geyser.reversion.editions.mcee.utils.TokenManager;
 import au.com.grieve.geyser.reversion.server.ReversionServer;
 import lombok.Getter;
 import lombok.Value;
-import org.geysermc.connector.GeyserConnector;
 import org.geysermc.connector.event.annotations.GeyserEventHandler;
-import org.geysermc.connector.event.events.geyser.GeyserStartEvent;
 import org.geysermc.connector.event.events.network.NewBedrockServerEvent;
 import org.geysermc.connector.network.BedrockProtocol;
 import org.geysermc.connector.network.session.GeyserSession;
 import org.geysermc.connector.plugin.GeyserPlugin;
-import org.geysermc.connector.plugin.PluginClassLoader;
-import org.geysermc.connector.plugin.PluginManager;
-import org.geysermc.connector.plugin.annotations.Plugin;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,46 +38,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Plugin(
-        name = "GeyserReversion",
-        version = "1.1.0-dev",
-        authors = {"bundabrg"},
-        description = "Provides multiversion protocol support for Geyser"
-)
 @Getter
-public class GeyserReversion extends GeyserPlugin {
+public class ReversionManager {
     @Getter
-    private static GeyserReversion instance;
+    private static ReversionManager instance;
 
     public final Map<String, BaseEdition> registeredEditions = new HashMap<>();
     public final List<RegisteredTranslator> registeredTranslators = new ArrayList<>();
 
-    private final TokenManager tokenManager;
-    private Configuration config;
+    private final GeyserPlugin plugin;
+    private final String editionName;
 
-    public GeyserReversion(PluginManager pluginManager, PluginClassLoader pluginClassLoader) {
-        super(pluginManager, pluginClassLoader);
+    public ReversionManager(GeyserPlugin plugin, String editionName) {
         instance = this;
-        tokenManager = new TokenManager(this);
+        this.plugin = plugin;
+        this.editionName = editionName;
 
-        loadConfig();
-        registerEditions();
-        registerTranslators();
+        plugin.registerEvents(this);
     }
 
-    /**
-     * Register Default Editions
-     */
-    protected void registerEditions() {
-        registerEdition("education", new EducationEdition(this));
-
-    }
-
-    /**
-     * Register Default translators
-     */
-    protected void registerTranslators() {
-
+    public void registerEdition(String name, BaseEdition edition) {
+        registeredEditions.put(name, edition);
     }
 
     public void registerTranslator(String fromEdition, int fromProtocolVersion, String toEdition,
@@ -100,29 +68,6 @@ public class GeyserReversion extends GeyserPlugin {
         );
     }
 
-    public void registerEdition(String name, BaseEdition edition) {
-        registeredEditions.put(name, edition);
-    }
-
-    /**
-     * Load our config, generating it if necessary
-     */
-    private void loadConfig() {
-        File configFile = new File(getDataFolder(), "config.yml");
-        if (!configFile.exists()) {
-            //noinspection ResultOfMethodCallIgnored
-            configFile.getParentFile().mkdirs();
-
-            try (FileOutputStream fos = new FileOutputStream(configFile);
-                 InputStream fis = getResourceAsStream("config.yml")) {
-                fis.transferTo(fos);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        config = Configuration.loadFromFile(configFile);
-    }
-
     /**
      * Grab the default Geyser Server and wrap it here
      *
@@ -130,41 +75,21 @@ public class GeyserReversion extends GeyserPlugin {
      */
     @GeyserEventHandler
     public void onNewBedrockServer(NewBedrockServerEvent event) {
+        BaseEdition edition = registeredEditions.get(editionName);
+        if (edition == null) {
+            plugin.getLogger().error("Unknown Edition '" + editionName + "'");
+            return;
+        }
+
         ReversionServer server = new ReversionServer(event.getBedrockServer());
-        server.setHandler();
+        edition.getServerEventHandler().setOriginal(event.getBedrockServer().getHandler());
+        server.setHandler(edition.getServerEventHandler());
 
         event.setBedrockServer(new ReversionServer(event.getBedrockServer()));
     }
 
-    @GeyserEventHandler
-    public void onGeyserStart(GeyserStartEvent event) {
-        // Register Education command
-        GeyserConnector.getInstance().getBootstrap().getGeyserCommandManager().registerCommand(
-                new EducationCommand("education", "Education Commands", "geyser.command.education", tokenManager));
-    }
-//    @Getter
-//    @RequiredArgsConstructor
-//    public class VersionDetectPacketHandler implements BedrockPacketHandler {
-//
-//        @Override
-//        public boolean handle(LoginPacket packet) {
-//            try {
-//                translator = GeyserReversion.getInstance().createTranslatorChain(packet.getProtocolVersion(), geyserSession);
-//                EducationEdition.getInstance().getPlugin().getLogger().debug("Player connected with version: " + translator.getCodec().getMinecraftVersion());
-//                setPacketCodec(translator.getCodec());
-//                return false;
-//            } catch (TranslatorException e) {
-//                EducationEdition.getInstance().getPlugin().getLogger().error("Failed to load Version Translation", e);
-//            }
-//            return false;
-//        }
-//    }
-
-
     /**
      * Create a translator chain from the client to the server.
-     * <p>
-     * The edition is inferred
      *
      * @param fromProtocolVersion Version of protocol used by client
      * @param session             the geyser session
@@ -172,7 +97,7 @@ public class GeyserReversion extends GeyserPlugin {
      * @throws TranslatorException on error
      */
     public BaseTranslator createTranslatorChain(int fromProtocolVersion, GeyserSession session) throws TranslatorException {
-        List<RegisteredTranslator> bestChain = getBestTranslatorChain(config.getEdition(), fromProtocolVersion,
+        List<RegisteredTranslator> bestChain = getBestTranslatorChain(editionName, fromProtocolVersion,
                 "bedrock", BedrockProtocol.DEFAULT_BEDROCK_CODEC.getProtocolVersion(), new ArrayList<>(registeredTranslators));
 
         if (bestChain == null) {
@@ -248,6 +173,7 @@ public class GeyserReversion extends GeyserPlugin {
         }
         return best;
     }
+
 
     @Value
     public static class RegisteredTranslator {

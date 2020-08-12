@@ -21,10 +21,10 @@ package au.com.grieve.geyser.reversion.server;
 import com.nukkitx.protocol.bedrock.BedrockPong;
 import com.nukkitx.protocol.bedrock.BedrockServerEventHandler;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
-import com.nukkitx.protocol.bedrock.compat.BedrockCompat;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.DatagramPacket;
 import lombok.Getter;
+import lombok.Setter;
 import org.geysermc.connector.GeyserConnector;
 import org.geysermc.connector.network.UpstreamPacketHandler;
 import org.geysermc.connector.network.session.GeyserSession;
@@ -35,11 +35,8 @@ import java.net.InetSocketAddress;
 @Getter
 @ParametersAreNonnullByDefault
 public class ReversionServerEventHandler implements BedrockServerEventHandler {
-    private final BedrockServerEventHandler original;
-
-    public ReversionServerEventHandler(BedrockServerEventHandler original) {
-        this.original = original;
-    }
+    @Setter
+    private BedrockServerEventHandler original;
 
     @Override
     public boolean onConnectionRequest(InetSocketAddress inetSocketAddress) {
@@ -48,12 +45,7 @@ public class ReversionServerEventHandler implements BedrockServerEventHandler {
 
     @Override
     public BedrockPong onQuery(InetSocketAddress address) {
-        BedrockPong pong = original.onQuery(address);
-        if (pong != null) {
-            pong.setProtocolVersion(BedrockCompat.COMPAT_CODEC.getProtocolVersion());
-        }
-
-        return pong;
+        return original.onQuery(address);
     }
 
     @Override

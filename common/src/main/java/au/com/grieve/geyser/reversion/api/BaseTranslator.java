@@ -24,7 +24,7 @@ import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.geysermc.connector.GeyserConnector;
+import org.geysermc.connector.network.BedrockProtocol;
 import org.geysermc.connector.network.session.GeyserSession;
 
 /**
@@ -90,7 +90,7 @@ public abstract class BaseTranslator {
 
     @Getter
     public static class DefaultTranslator extends BaseTranslator {
-        BedrockPacketCodec codec = GeyserConnector.BEDROCK_PACKET_CODEC;
+        BedrockPacketCodec codec = BedrockProtocol.DEFAULT_BEDROCK_CODEC;
 
         public DefaultTranslator(GeyserSession session) {
             super(session);

@@ -19,11 +19,20 @@
 package au.com.grieve.geyser.reversion.editions.mcee.server;
 
 import au.com.grieve.geyser.reversion.server.ReversionServerEventHandler;
-import com.nukkitx.protocol.bedrock.BedrockServerEventHandler;
+import com.nukkitx.protocol.bedrock.BedrockPong;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.net.InetSocketAddress;
+
+@ParametersAreNonnullByDefault
 public class EducationServerEventHandler extends ReversionServerEventHandler {
+    @Override
+    public BedrockPong onQuery(InetSocketAddress address) {
+        BedrockPong pong = super.onQuery(address);
+        if (pong != null) {
+            pong.setEdition("MCEE");
+        }
 
-    public EducationServerEventHandler(BedrockServerEventHandler original) {
-        super(original);
+        return pong;
     }
 }

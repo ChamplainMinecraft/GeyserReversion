@@ -50,7 +50,6 @@ public class ReversionServer extends BedrockServer {
 
         this.original = original;
         getRakNet().setListener(new ReversionServerListener(original.getRakNet().getListener()));
-        setHandler(new ReversionServerEventHandler(original.getHandler()));
     }
 
     protected EventLoopGroup getEventLoopGroup() {

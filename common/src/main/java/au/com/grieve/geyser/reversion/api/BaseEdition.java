@@ -21,12 +21,9 @@ package au.com.grieve.geyser.reversion.api;
 import au.com.grieve.geyser.reversion.server.ReversionServerEventHandler;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.geysermc.connector.plugin.GeyserPlugin;
 
 @Getter
 @RequiredArgsConstructor
 public abstract class BaseEdition {
-    private final GeyserPlugin plugin;
-
     public abstract ReversionServerEventHandler getServerEventHandler();
 }
