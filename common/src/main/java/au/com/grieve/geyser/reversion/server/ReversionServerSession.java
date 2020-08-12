@@ -16,29 +16,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package au.com.grieve.geyser.reversion.editions.mcee.hook;
+package au.com.grieve.geyser.reversion.server;
 
 import au.com.grieve.geyser.reversion.api.BaseTranslator;
-import au.com.grieve.geyser.reversion.api.UpstreamSession;
-import au.com.grieve.geyser.reversion.editions.mcee.EducationEdition;
-import au.com.grieve.geyser.reversion.editions.mcee.exceptions.TranslatorException;
 import com.nukkitx.network.raknet.RakNetSession;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
-import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
-import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import com.nukkitx.protocol.bedrock.wrapper.BedrockWrapperSerializer;
 import io.netty.channel.EventLoop;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.geysermc.connector.GeyserConnector;
 import org.geysermc.connector.network.session.GeyserSession;
 
 import java.util.Collection;
 
 @Getter
-public class ReversionServerSession extends BedrockServerSession implements UpstreamSession {
+public class ReversionServerSession extends BedrockServerSession {
 
     @Setter
     private GeyserSession geyserSession;
@@ -49,12 +42,9 @@ public class ReversionServerSession extends BedrockServerSession implements Upst
         super(connection, eventLoop, serializer);
 
         ReversionBatchHandler batchHandler = new ReversionBatchHandler();
-        batchHandler.getPacketHandlers().add(new VersionDetectPacketHandler());
-
         setBatchHandler(batchHandler);
     }
 
-    @Override
     public void sendPacketDirect(BedrockPacket packet) {
         super.sendPacket(packet);
     }
@@ -62,30 +52,7 @@ public class ReversionServerSession extends BedrockServerSession implements Upst
     @Override
     public void sendWrapped(Collection<BedrockPacket> packets, boolean encrypt) {
         for (BedrockPacket packet : packets) {
-            translator.sendUpstream(packet);
-        }
-    }
-
-    @Getter
-    @RequiredArgsConstructor
-    public class VersionDetectPacketHandler implements BedrockPacketHandler {
-
-        @Override
-        public boolean handle(LoginPacket packet) {
-            try {
-                translator = EducationEdition.getInstance().createTranslator(
-                        packet.getProtocolVersion(), GeyserConnector.BEDROCK_PACKET_CODEC.getProtocolVersion(), geyserSession);
-                EducationEdition.getInstance().getPlugin().getLogger().debug("Player connected with version: " + translator.getCodec().getMinecraftVersion());
-                setPacketCodec(translator.getCodec());
-                return false;
-            } catch (TranslatorException e) {
-                EducationEdition.getInstance().getPlugin().getLogger().error("Failed to load Version Translation", e);
-            }
-
-            // Unknown Version. We will set the current codec and pass on instead
-            System.err.println("Unknown version so assuming latest");
-            setPacketCodec(GeyserConnector.BEDROCK_PACKET_CODEC);
-            return false;
+            translator.getLast().sendUpstream(packet);
         }
     }
 }

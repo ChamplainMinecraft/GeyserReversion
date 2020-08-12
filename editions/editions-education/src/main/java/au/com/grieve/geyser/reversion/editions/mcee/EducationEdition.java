@@ -20,8 +20,8 @@ package au.com.grieve.geyser.reversion.editions.mcee;
 
 import au.com.grieve.geyser.reversion.api.BaseEdition;
 import au.com.grieve.geyser.reversion.api.BaseTranslator;
+import au.com.grieve.geyser.reversion.api.TranslatorException;
 import au.com.grieve.geyser.reversion.editions.mcee.commands.EducationCommand;
-import au.com.grieve.geyser.reversion.editions.mcee.exceptions.TranslatorException;
 import au.com.grieve.geyser.reversion.editions.mcee.hook.ReversionBedrockServer;
 import au.com.grieve.geyser.reversion.editions.mcee.translators.v390_v407.Translator_mcee_v390_v407;
 import au.com.grieve.geyser.reversion.editions.mcee.utils.TokenManager;

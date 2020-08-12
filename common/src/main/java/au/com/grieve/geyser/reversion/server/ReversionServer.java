@@ -16,81 +16,49 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package au.com.grieve.geyser.reversion.editions.mcee.hook;
+package au.com.grieve.geyser.reversion.server;
 
 import com.nukkitx.network.raknet.RakNetServerListener;
 import com.nukkitx.network.raknet.RakNetServerSession;
 import com.nukkitx.network.raknet.RakNetSession;
 import com.nukkitx.network.util.DisconnectReason;
 import com.nukkitx.network.util.EventLoops;
-import com.nukkitx.protocol.bedrock.BedrockPong;
 import com.nukkitx.protocol.bedrock.BedrockRakNetSessionListener;
 import com.nukkitx.protocol.bedrock.BedrockServer;
-import com.nukkitx.protocol.bedrock.BedrockServerEventHandler;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
-import com.nukkitx.protocol.bedrock.compat.BedrockCompat;
 import com.nukkitx.protocol.bedrock.wrapper.BedrockWrapperSerializer;
 import com.nukkitx.protocol.bedrock.wrapper.BedrockWrapperSerializers;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.DatagramPacket;
 import lombok.Getter;
-import org.geysermc.connector.GeyserConnector;
-import org.geysermc.connector.network.UpstreamPacketHandler;
-import org.geysermc.connector.network.session.GeyserSession;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
 
+/**
+ * A BedrockServer implementation that wraps the existing BedrockServer as far as possible
+ */
 @Getter
-public class ReversionBedrockServer extends BedrockServer {
-    protected final EventLoopGroup eventLoopGroup;
+public class ReversionServer extends BedrockServer {
     private final BedrockServer original;
 
-    public ReversionBedrockServer(BedrockServer original) {
-        super(original.getBindAddress(), 1, EventLoops.commonGroup());
+    public ReversionServer(BedrockServer original) {
+        super(original.getBindAddress());
 
         this.original = original;
-        eventLoopGroup = EventLoops.commonGroup();
-        getRakNet().setListener(new ReversionServerListener(getRakNet().getListener()));
+        getRakNet().setListener(new ReversionServerListener(original.getRakNet().getListener()));
         setHandler(new ReversionServerEventHandler(original.getHandler()));
     }
 
-    @ParametersAreNonnullByDefault
-    protected static class ReversionServerEventHandler implements BedrockServerEventHandler {
-        private final BedrockServerEventHandler original;
-
-        public ReversionServerEventHandler(BedrockServerEventHandler original) {
-            this.original = original;
-        }
-
-        @Override
-        public boolean onConnectionRequest(InetSocketAddress inetSocketAddress) {
-            return original.onConnectionRequest(inetSocketAddress);
-        }
-
-        @Override
-        public BedrockPong onQuery(InetSocketAddress inetSocketAddress) {
-            BedrockPong pong = original.onQuery(inetSocketAddress);
-            if (pong != null) {
-                pong.setEdition("MCEE");
-                pong.setProtocolVersion(BedrockCompat.COMPAT_CODEC.getProtocolVersion());
-            }
-
-            return pong;
-        }
-
-        @Override
-        public void onSessionCreation(BedrockServerSession bedrockSession) {
-            // Handled Elsewhere
-        }
-
-        @Override
-        public void onUnhandledDatagram(ChannelHandlerContext ctx, DatagramPacket packet) {
-            original.onUnhandledDatagram(ctx, packet);
-
+    protected EventLoopGroup getEventLoopGroup() {
+        try {
+            return (EventLoopGroup) getClass().getDeclaredMethod("getEventLoopGroup").invoke(this);
+        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+            e.printStackTrace();
+            return EventLoops.commonGroup();
         }
     }
 
@@ -108,14 +76,14 @@ public class ReversionBedrockServer extends BedrockServer {
         }
 
         @Override
-        public byte[] onQuery(InetSocketAddress inetSocketAddress) {
-            return original.onQuery(inetSocketAddress);
+        public byte[] onQuery(InetSocketAddress address) {
+            return original.onQuery(address);
         }
 
         @Override
         public void onSessionCreation(RakNetServerSession connection) {
             BedrockWrapperSerializer serializer = BedrockWrapperSerializers.getSerializer(connection.getProtocolVersion());
-            ReversionServerSession bedrockSession = new ReversionServerSession(connection, ReversionBedrockServer.this.eventLoopGroup.next(), serializer);
+            ReversionServerSession bedrockSession = new ReversionServerSession(connection, getEventLoopGroup().next(), serializer);
 
             BedrockRakNetSessionListener.Server server;
             try {
@@ -123,7 +91,7 @@ public class ReversionBedrockServer extends BedrockServer {
                         .getDeclaredConstructor(BedrockServerSession.class, RakNetSession.class, BedrockServer.class);
 
                 constructor.setAccessible(true);
-                server = constructor.newInstance(bedrockSession, connection, ReversionBedrockServer.this);
+                server = constructor.newInstance(bedrockSession, connection, ReversionServer.this);
             } catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
                 e.printStackTrace();
                 connection.disconnect(DisconnectReason.CLOSED_BY_REMOTE_PEER);
@@ -131,13 +99,6 @@ public class ReversionBedrockServer extends BedrockServer {
             }
 
             connection.setListener(server);
-
-            GeyserSession session = new GeyserSession(GeyserConnector.getInstance(), bedrockSession);
-            bedrockSession.setGeyserSession(session);
-
-            bedrockSession.setLogging(true);
-            bedrockSession.setPacketHandler(new UpstreamPacketHandler(GeyserConnector.getInstance(), session));
-            bedrockSession.setPacketCodec(BedrockCompat.COMPAT_CODEC);
         }
 
         @Override

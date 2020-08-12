@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package au.com.grieve.geyser.reversion.editions.mcee.exceptions;
+package au.com.grieve.geyser.reversion.api;
 
 public class TranslatorException extends Exception {
     public TranslatorException(Throwable e) {

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package au.com.grieve.geyser.reversion.editions.mcee.hook;
+package au.com.grieve.geyser.reversion.server;
 
 import au.com.grieve.geyser.reversion.api.BaseTranslator;
 import com.nukkitx.protocol.bedrock.BedrockPacket;

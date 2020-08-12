@@ -18,7 +18,7 @@
 
 package au.com.grieve.geyser.reversion.api;
 
-import com.nukkitx.protocol.bedrock.BedrockServer;
+import au.com.grieve.geyser.reversion.server.ReversionServerEventHandler;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.geysermc.connector.plugin.GeyserPlugin;
@@ -28,5 +28,5 @@ import org.geysermc.connector.plugin.GeyserPlugin;
 public abstract class BaseEdition {
     private final GeyserPlugin plugin;
 
-    public abstract BedrockServer hook(BedrockServer bedrockServer);
+    public abstract ReversionServerEventHandler getServerEventHandler();
 }

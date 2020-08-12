@@ -16,11 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package au.com.grieve.geyser.reversion.api;
+package au.com.grieve.geyser.reversion.editions.mcee;
 
-import com.nukkitx.protocol.bedrock.BedrockPacket;
+public class EducationServerEventHandler extends ReversionServerEventHandler {
 
-public interface UpstreamSession {
-
-    void sendPacketDirect(BedrockPacket packet);
 }

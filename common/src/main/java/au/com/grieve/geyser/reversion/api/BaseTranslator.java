@@ -18,6 +18,7 @@
 
 package au.com.grieve.geyser.reversion.api;
 
+import au.com.grieve.geyser.reversion.server.ReversionServerSession;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
 import lombok.Getter;
@@ -34,14 +35,22 @@ import org.geysermc.connector.network.session.GeyserSession;
 public abstract class BaseTranslator {
 
     @Setter
-    private BaseTranslator next;
+    public BaseTranslator next;
 
     @Setter
-    private BaseTranslator previous;
+    public BaseTranslator previous;
 
     private final GeyserSession session;
 
     public abstract BedrockPacketCodec getCodec();
+
+    public BaseTranslator getLast() {
+        return next == null ? this : next.getLast();
+    }
+
+    public BaseTranslator getFirst() {
+        return previous == null ? this : previous.getFirst();
+    }
 
     /**
      * The name of this translator
@@ -64,7 +73,7 @@ public abstract class BaseTranslator {
 
         // Send out
         System.err.println("out: " + packet);
-        ((UpstreamSession) session.getUpstream().getSession()).sendPacketDirect(packet);
+        ((ReversionServerSession) session.getUpstream().getSession()).sendPacketDirect(packet);
         return true;
     }
 
@@ -87,4 +96,5 @@ public abstract class BaseTranslator {
             super(session);
         }
     }
+
 }
