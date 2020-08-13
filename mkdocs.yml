@@ -59,13 +59,13 @@ plugins:
   - exclude:
       glob:
         - 'theme/*'
-  - git-revision-date-localized:
-      type: timeago
-  - mkpdfs:
-      author: GeyserReversion Developers
-      toc_title: Table of contents
-      output_path: pdf/documentation.pdf
-      design: docs/css/pdf.css
+#  - git-revision-date-localized:
+#      type: timeago
+#  - mkpdfs:
+#      author: GeyserReversion Developers
+#      toc_title: Table of contents
+#      output_path: pdf/documentation.pdf
+#      design: docs/css/pdf.css
 
 # Discord not yet supported but it will be soon
 #extra:
