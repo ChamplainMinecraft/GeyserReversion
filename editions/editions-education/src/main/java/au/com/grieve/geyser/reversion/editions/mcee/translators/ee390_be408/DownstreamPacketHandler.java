@@ -18,12 +18,33 @@
 
 package au.com.grieve.geyser.reversion.editions.mcee.translators.ee390_be408;
 
+import com.nukkitx.protocol.bedrock.data.inventory.ContainerId;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
+import com.nukkitx.protocol.bedrock.packet.CreativeContentPacket;
+import com.nukkitx.protocol.bedrock.packet.InventoryContentPacket;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Handler for packets received from Downstream
+ */
 @Getter
 @RequiredArgsConstructor
 public class DownstreamPacketHandler implements BedrockPacketHandler {
     private final Translator_ee390_be408 translator;
+
+    /**
+     * Replace the CreativeContentPacket with an InventoryContentPacket of type Creative
+     *
+     * @param packet creativecontent packet
+     * @return true if handled
+     */
+    @Override
+    public boolean handle(CreativeContentPacket packet) {
+        InventoryContentPacket inventoryContentPacket = new InventoryContentPacket();
+        inventoryContentPacket.setContainerId(ContainerId.CREATIVE);
+        packet.setContents(packet.getContents());
+        translator.sendUpstream(inventoryContentPacket);
+        return true;
+    }
 }

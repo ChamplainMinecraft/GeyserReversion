@@ -27,6 +27,9 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.geysermc.connector.GeyserConnector;
 
+/**
+ * Handler for packets received from Upstream
+ */
 @Getter
 @RequiredArgsConstructor
 public class UpstreamPacketHandler implements BedrockPacketHandler {
@@ -34,7 +37,6 @@ public class UpstreamPacketHandler implements BedrockPacketHandler {
 
     @Override
     public boolean handle(LoginPacket packet) {
-        System.err.println(packet);
         MCEELoginEncryptionUtils.encryptPlayerConnection(GeyserConnector.getInstance(), translator.getSession(), packet);
 
         PlayStatusPacket playStatus = new PlayStatusPacket();

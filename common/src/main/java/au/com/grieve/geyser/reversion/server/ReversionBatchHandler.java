@@ -64,11 +64,11 @@ public class ReversionBatchHandler implements BatchHandler {
                 if (translator != null && translator.receiveUpstream(packet)) {
                     return;
                 }
-            }
-
-            BedrockPacketHandler handler = session.getPacketHandler();
-            if (handler == null || !packet.handle(handler)) {
-                log.debug("Unhandled packet for {}: {}", session.getAddress(), packet);
+            } else {
+                BedrockPacketHandler handler = session.getPacketHandler();
+                if (handler == null || !packet.handle(handler)) {
+                    log.debug("Unhandled packet for {}: {}", session.getAddress(), packet);
+                }
             }
         }
     }

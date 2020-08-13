@@ -55,6 +55,7 @@ public class ReversionServerEventHandler implements BedrockServerEventHandler {
 
         bedrockSession.setLogging(true);
         bedrockSession.setPacketHandler(new UpstreamPacketHandler(GeyserConnector.getInstance(), session));
+
     }
 
     @Override

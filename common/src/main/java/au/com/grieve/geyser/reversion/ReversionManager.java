@@ -80,12 +80,11 @@ public class ReversionManager {
             plugin.getLogger().error("Unknown Edition '" + editionName + "'");
             return;
         }
-
         ReversionServer server = new ReversionServer(event.getBedrockServer());
         edition.getServerEventHandler().setOriginal(event.getBedrockServer().getHandler());
         server.setHandler(edition.getServerEventHandler());
 
-        event.setBedrockServer(new ReversionServer(event.getBedrockServer()));
+        event.setBedrockServer(server);
     }
 
     /**
@@ -100,10 +99,11 @@ public class ReversionManager {
         List<RegisteredTranslator> bestChain = getBestTranslatorChain(editionName, fromProtocolVersion,
                 "bedrock", BedrockProtocol.DEFAULT_BEDROCK_CODEC.getProtocolVersion(), new ArrayList<>(registeredTranslators));
 
+
         if (bestChain == null) {
             // No translator found so return the default
             try {
-                return BaseTranslator.DefaultTranslator.class.getConstructor(GeyserSession.class).newInstance(session);
+                return BaseTranslator.DefaultTranslator.class.getConstructor(ReversionManager.class, GeyserSession.class).newInstance(this, session);
             } catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
                 throw new TranslatorException(e);
             }
@@ -114,7 +114,7 @@ public class ReversionManager {
         for (RegisteredTranslator registeredTranslator : bestChain) {
             BaseTranslator translator;
             try {
-                translator = registeredTranslator.getTranslatorClass().getConstructor(GeyserPlugin.class, GeyserSession.class)
+                translator = registeredTranslator.getTranslatorClass().getConstructor(ReversionManager.class, GeyserSession.class)
                         .newInstance(this, session);
             } catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
                 throw new TranslatorException(e);

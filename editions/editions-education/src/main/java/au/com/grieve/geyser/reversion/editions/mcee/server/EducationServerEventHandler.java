@@ -32,7 +32,6 @@ public class EducationServerEventHandler extends ReversionServerEventHandler {
         if (pong != null) {
             pong.setEdition("MCEE");
         }
-
         return pong;
     }
 }

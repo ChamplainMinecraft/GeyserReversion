@@ -74,7 +74,6 @@ public abstract class BaseTranslator {
         }
 
         // Send out
-        System.err.println("out: " + packet);
         ((ReversionServerSession) session.getUpstream().getSession()).sendPacketDirect(packet);
         return true;
     }
@@ -86,7 +85,6 @@ public abstract class BaseTranslator {
         }
 
         // Pass to Geyser
-        System.err.println(packet);
         return session.receiveUpstreamPacket(packet);
     }
 
@@ -94,8 +92,8 @@ public abstract class BaseTranslator {
     public static class DefaultTranslator extends BaseTranslator {
         BedrockPacketCodec codec = BedrockProtocol.DEFAULT_BEDROCK_CODEC;
 
-        public DefaultTranslator(GeyserSession session) {
-            super(session);
+        public DefaultTranslator(ReversionManager manager, GeyserSession session) {
+            super(manager, session);
         }
     }
 

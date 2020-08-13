@@ -58,7 +58,7 @@ public class ReversionServerSession extends BedrockServerSession {
 
     @Override
     public void sendPacket(BedrockPacket packet) {
-        translator.getLast().sendUpstream(packet);
+        translator.getLast().receiveDownstream(packet);
     }
 
     @Getter

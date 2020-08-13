@@ -25,11 +25,11 @@ import com.nukkitx.network.util.DisconnectReason;
 import com.nukkitx.network.util.EventLoops;
 import com.nukkitx.protocol.bedrock.BedrockRakNetSessionListener;
 import com.nukkitx.protocol.bedrock.BedrockServer;
+import com.nukkitx.protocol.bedrock.BedrockServerEventHandler;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import com.nukkitx.protocol.bedrock.wrapper.BedrockWrapperSerializer;
 import com.nukkitx.protocol.bedrock.wrapper.BedrockWrapperSerializers;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.DatagramPacket;
 import lombok.Getter;
 
@@ -46,19 +46,18 @@ public class ReversionServer extends BedrockServer {
     private final BedrockServer original;
 
     public ReversionServer(BedrockServer original) {
-        super(original.getBindAddress());
+        super(original.getBindAddress(), 1, EventLoops.commonGroup());
 
         this.original = original;
         getRakNet().setListener(new ReversionServerListener(original.getRakNet().getListener()));
     }
 
-    protected EventLoopGroup getEventLoopGroup() {
-        try {
-            return (EventLoopGroup) getClass().getDeclaredMethod("getEventLoopGroup").invoke(this);
-        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-            e.printStackTrace();
-            return EventLoops.commonGroup();
-        }
+    @Override
+    public void setHandler(BedrockServerEventHandler handler) {
+        super.setHandler(handler);
+
+        // Also set it in original
+        original.setHandler(handler);
     }
 
     @ParametersAreNonnullByDefault
@@ -82,8 +81,7 @@ public class ReversionServer extends BedrockServer {
         @Override
         public void onSessionCreation(RakNetServerSession connection) {
             BedrockWrapperSerializer serializer = BedrockWrapperSerializers.getSerializer(connection.getProtocolVersion());
-            ReversionServerSession bedrockSession = new ReversionServerSession(connection, getEventLoopGroup().next(), serializer);
-
+            ReversionServerSession bedrockSession = new ReversionServerSession(connection, EventLoops.commonGroup().next(), serializer);
             BedrockRakNetSessionListener.Server server;
             try {
                 Constructor<BedrockRakNetSessionListener.Server> constructor = BedrockRakNetSessionListener.Server.class
