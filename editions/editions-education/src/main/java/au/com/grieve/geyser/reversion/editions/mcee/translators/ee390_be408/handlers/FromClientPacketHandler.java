@@ -16,8 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package au.com.grieve.geyser.reversion.editions.mcee.translators.ee390_be408;
+package au.com.grieve.geyser.reversion.editions.mcee.translators.ee390_be408.handlers;
 
+import au.com.grieve.geyser.reversion.editions.mcee.translators.ee390_be408.Translator_ee390_be408;
 import au.com.grieve.geyser.reversion.editions.mcee.utils.MCEELoginEncryptionUtils;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
@@ -28,11 +29,11 @@ import lombok.RequiredArgsConstructor;
 import org.geysermc.connector.GeyserConnector;
 
 /**
- * Handler for packets received from Upstream
+ * Handler for packets received from the Client
  */
 @Getter
 @RequiredArgsConstructor
-public class UpstreamPacketHandler implements BedrockPacketHandler {
+public class FromClientPacketHandler implements BedrockPacketHandler {
     private final Translator_ee390_be408 translator;
 
     @Override
@@ -41,10 +42,10 @@ public class UpstreamPacketHandler implements BedrockPacketHandler {
 
         PlayStatusPacket playStatus = new PlayStatusPacket();
         playStatus.setStatus(PlayStatusPacket.Status.LOGIN_SUCCESS);
-        translator.sendUpstream(playStatus);
+        translator.toUpstream(playStatus);
 
         ResourcePacksInfoPacket resourcePacksInfo = new ResourcePacksInfoPacket();
-        translator.sendUpstream(resourcePacksInfo);
+        translator.toUpstream(resourcePacksInfo);
         return true;
     }
 }

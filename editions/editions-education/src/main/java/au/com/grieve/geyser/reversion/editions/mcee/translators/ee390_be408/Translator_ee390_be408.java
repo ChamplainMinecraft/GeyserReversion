@@ -20,6 +20,10 @@ package au.com.grieve.geyser.reversion.editions.mcee.translators.ee390_be408;
 
 import au.com.grieve.geyser.reversion.ReversionManager;
 import au.com.grieve.geyser.reversion.api.BaseTranslator;
+import au.com.grieve.geyser.reversion.editions.mcee.translators.ee390_be408.handlers.FromClientPacketHandler;
+import au.com.grieve.geyser.reversion.editions.mcee.translators.ee390_be408.handlers.FromDownstreamPacketHandler;
+import au.com.grieve.geyser.reversion.editions.mcee.translators.ee390_be408.handlers.FromUpstreamPacketHandler;
+import au.com.grieve.geyser.reversion.editions.mcee.translators.ee390_be408.handlers.ToClientPacketHandler;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
@@ -31,29 +35,51 @@ import org.geysermc.connector.network.session.GeyserSession;
 public class Translator_ee390_be408 extends BaseTranslator {
     private final BedrockPacketCodec codec = Bedrock_v390.V390_CODEC;
 
-    private final BedrockPacketHandler upstreamPacketHandler;
-    private final BedrockPacketHandler downstreamPacketHandler;
+    private final BedrockPacketHandler fromUpstreamPacketHandler;
+    private final BedrockPacketHandler fromDownstreamPacketHandler;
+
+    private final BedrockPacketHandler fromClientPacketHandler;
+    private final BedrockPacketHandler toClientPacketHandler;
 
     public Translator_ee390_be408(ReversionManager manager, GeyserSession session) {
         super(manager, session);
 
-        upstreamPacketHandler = new UpstreamPacketHandler(this);
-        downstreamPacketHandler = new DownstreamPacketHandler(this);
+        fromUpstreamPacketHandler = new FromUpstreamPacketHandler(this);
+        fromDownstreamPacketHandler = new FromDownstreamPacketHandler(this);
+
+        fromClientPacketHandler = new FromClientPacketHandler(this);
+        toClientPacketHandler = new ToClientPacketHandler(this);
     }
 
     @Override
-    public boolean receiveUpstream(BedrockPacket packet) {
-        if (packet.handle(upstreamPacketHandler)) {
+    public boolean fromUpstream(BedrockPacket packet) {
+        if (packet.handle(fromUpstreamPacketHandler)) {
             return true;
         }
-        return super.receiveUpstream(packet);
+        return super.fromUpstream(packet);
     }
 
     @Override
-    public boolean receiveDownstream(BedrockPacket packet) {
-        if (packet.handle(downstreamPacketHandler)) {
+    public boolean fromDownstream(BedrockPacket packet) {
+        if (packet.handle(fromDownstreamPacketHandler)) {
             return true;
         }
-        return super.receiveDownstream(packet);
+        return super.fromDownstream(packet);
+    }
+
+    @Override
+    public boolean fromClient(BedrockPacket packet) {
+        if (packet.handle(fromClientPacketHandler)) {
+            return true;
+        }
+        return super.fromClient(packet);
+    }
+
+    @Override
+    public boolean toClient(BedrockPacket packet) {
+        if (packet.handle(toClientPacketHandler)) {
+            return true;
+        }
+        return super.toClient(packet);
     }
 }

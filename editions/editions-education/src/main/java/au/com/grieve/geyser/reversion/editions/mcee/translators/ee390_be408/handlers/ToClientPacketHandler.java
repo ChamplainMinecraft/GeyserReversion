@@ -16,35 +16,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package au.com.grieve.geyser.reversion.editions.mcee.translators.ee390_be408;
+package au.com.grieve.geyser.reversion.editions.mcee.translators.ee390_be408.handlers;
 
-import com.nukkitx.protocol.bedrock.data.inventory.ContainerId;
+import au.com.grieve.geyser.reversion.editions.mcee.translators.ee390_be408.Translator_ee390_be408;
+import com.nukkitx.protocol.bedrock.data.GameRuleData;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
-import com.nukkitx.protocol.bedrock.packet.CreativeContentPacket;
-import com.nukkitx.protocol.bedrock.packet.InventoryContentPacket;
+import com.nukkitx.protocol.bedrock.packet.StartGamePacket;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Handler for packets received from Downstream
+ * Handler for packets received from the Client
  */
 @Getter
 @RequiredArgsConstructor
-public class DownstreamPacketHandler implements BedrockPacketHandler {
+public class ToClientPacketHandler implements BedrockPacketHandler {
     private final Translator_ee390_be408 translator;
 
-    /**
-     * Replace the CreativeContentPacket with an InventoryContentPacket of type Creative
-     *
-     * @param packet creativecontent packet
-     * @return true if handled
-     */
     @Override
-    public boolean handle(CreativeContentPacket packet) {
-        InventoryContentPacket inventoryContentPacket = new InventoryContentPacket();
-        inventoryContentPacket.setContainerId(ContainerId.CREATIVE);
-        packet.setContents(packet.getContents());
-        translator.sendUpstream(inventoryContentPacket);
-        return true;
+    public boolean handle(StartGamePacket packet) {
+        // Disable CodeBuilder
+        packet.getGamerules().add(new GameRuleData<>("codebuilder", false));
+        return false;
     }
 }

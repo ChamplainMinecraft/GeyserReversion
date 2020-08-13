@@ -61,7 +61,7 @@ public class ReversionBatchHandler implements BatchHandler {
 
             if (session instanceof ReversionServerSession) {
                 BaseTranslator translator = ((ReversionServerSession) session).getTranslator();
-                if (translator != null && translator.receiveUpstream(packet)) {
+                if (translator != null && translator.fromUpstream(packet)) {
                     return;
                 }
             } else {

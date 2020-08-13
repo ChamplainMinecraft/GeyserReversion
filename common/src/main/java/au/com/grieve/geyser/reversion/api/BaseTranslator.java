@@ -29,15 +29,27 @@ import org.geysermc.connector.network.BedrockProtocol;
 import org.geysermc.connector.network.session.GeyserSession;
 
 /**
- * A translator translates from one version to another. It may chain to another translator
+ * A translator translates from one version to another. It may chain to another translator.
  */
 @Getter
 @RequiredArgsConstructor
 public abstract class BaseTranslator {
 
+    /**
+     * Next Translator in chain. If null then we are the closest to Geyser
+     *
+     * @param next Translater to set as next
+     * @return the next translator
+     */
     @Setter
     public BaseTranslator next;
 
+    /**
+     * Previous Translator in chain. If null then we are the closest to the Client
+     *
+     * @param previous Translator to set as previous
+     * @return the previous translator
+     */
     @Setter
     public BaseTranslator previous;
 
@@ -46,46 +58,126 @@ public abstract class BaseTranslator {
 
     public abstract BedrockPacketCodec getCodec();
 
+    /**
+     * Get the last translator in the chain
+     *
+     * @return the last translator
+     */
     public BaseTranslator getLast() {
         return next == null ? this : next.getLast();
     }
 
+    /**
+     * Get the first translator in the chain
+     *
+     * @return the first translator
+     */
     public BaseTranslator getFirst() {
         return previous == null ? this : previous.getFirst();
     }
 
     /**
-     * The name of this translator
+     * Receive a packet from upstream
      *
-     * @return the string name
+     * @param packet Packet to receive
+     * @return true if handled
      */
-    public boolean receiveUpstream(BedrockPacket packet) {
-        return sendDownstream(packet);
+    public boolean fromUpstream(BedrockPacket packet) {
+        return toDownstream(packet);
     }
 
-    public boolean receiveDownstream(BedrockPacket packet) {
-        return sendUpstream(packet);
+    /**
+     * Receive a packet from downstream
+     *
+     * @param packet Packet to receive
+     * @return true if handled
+     */
+    public boolean fromDownstream(BedrockPacket packet) {
+        return toUpstream(packet);
     }
 
-    public boolean sendUpstream(BedrockPacket packet) {
+    /**
+     * Receive a packet from Geyser
+     * <p>
+     * This is only executed if this translator is the end in the chain
+     *
+     * @param packet Packet to receieve
+     * @return true if handled
+     */
+    public boolean fromGeyser(BedrockPacket packet) {
+        return fromDownstream(packet);
+    }
+
+
+    /**
+     * Receive a packet from Client
+     * <p>
+     * This is only executed if this translator is the first in the chain
+     *
+     * @param packet Packet to receive
+     * @return true if handled
+     */
+    public boolean fromClient(BedrockPacket packet) {
+        return fromUpstream(packet);
+    }
+
+    /**
+     * Send a packet to our upstream
+     *
+     * @param packet Packet to send
+     * @return true if handled
+     */
+    public boolean toUpstream(BedrockPacket packet) {
         // Try pass to previous in chain
         if (previous != null) {
-            return previous.receiveDownstream(packet);
+            return previous.fromDownstream(packet);
         }
 
-        // Send out
-        ((ReversionServerSession) session.getUpstream().getSession()).sendPacketDirect(packet);
-        return true;
+        // Send to Client
+        return toClient(packet);
     }
 
-    public boolean sendDownstream(BedrockPacket packet) {
+    /**
+     * Send a packet to our downstream
+     *
+     * @param packet Packet to send
+     * @return true if handled
+     */
+    public boolean toDownstream(BedrockPacket packet) {
         // Try pass to next in chain
         if (next != null) {
-            return next.receiveUpstream(packet);
+            return next.fromUpstream(packet);
         }
 
         // Pass to Geyser
+        return toGeyser(packet);
+    }
+
+    /**
+     * Send a packet to Geyser
+     * <p>
+     * This is only executed when we are the last in the chain
+     *
+     * @param packet Packet to send
+     * @return true if handled
+     */
+    public boolean toGeyser(BedrockPacket packet) {
         return session.receiveUpstreamPacket(packet);
+    }
+
+    /**
+     * Send a packet to the Client
+     * <p>
+     * This is only executed when we are the first in the chain
+     *
+     * @param packet Packet to send
+     * @return true if handled
+     */
+    public boolean toClient(BedrockPacket packet) {
+        ((ReversionServerSession) session.getUpstream().getSession()).sendPacketDirect(packet);
+
+        // Always handled
+        return true;
     }
 
     @Getter
