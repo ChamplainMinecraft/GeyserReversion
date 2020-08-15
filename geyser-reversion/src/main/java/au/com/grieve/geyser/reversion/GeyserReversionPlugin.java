@@ -18,9 +18,17 @@
 
 package au.com.grieve.geyser.reversion;
 
+import au.com.grieve.geyser.reversion.api.Edition;
 import au.com.grieve.geyser.reversion.config.Configuration;
-import au.com.grieve.geyser.reversion.editions.mcee.EducationEdition;
+import au.com.grieve.geyser.reversion.editions.bedrock.BedrockEdition;
+import au.com.grieve.geyser.reversion.editions.education.EducationEdition;
+import au.com.grieve.reversion.api.Translator;
+import au.com.grieve.reversion.translators.v390ee_to_v408be.Translator_v390ee_to_v408be;
 import lombok.Getter;
+import org.geysermc.connector.GeyserConnector;
+import org.geysermc.connector.event.annotations.GeyserEventHandler;
+import org.geysermc.connector.event.events.geyser.GeyserStartEvent;
+import org.geysermc.connector.event.handlers.EventHandler;
 import org.geysermc.connector.plugin.GeyserPlugin;
 import org.geysermc.connector.plugin.PluginClassLoader;
 import org.geysermc.connector.plugin.PluginManager;
@@ -30,6 +38,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Plugin(
         name = "GeyserReversion",
@@ -42,27 +55,50 @@ public class GeyserReversionPlugin extends GeyserPlugin {
     @Getter
     private static GeyserReversionPlugin instance;
 
+    private final Map<String, Edition> registeredEditions = new HashMap<>();
+    private final List<Class<? extends Translator>> registeredTranslators = new ArrayList<>();
+
     private Configuration config;
-    private final ReversionManager manager;
 
     public GeyserReversionPlugin(PluginManager pluginManager, PluginClassLoader pluginClassLoader) {
         super(pluginManager, pluginClassLoader);
         instance = this;
 
         loadConfig();
-        manager = new ReversionManager(this, config.getEdition());
-
         registerEditions();
-
-
+        registerTranslators();
     }
 
     /**
-     * Register Default Editions
+     * Register built-in editions
      */
-    protected void registerEditions() {
-        manager.registerEdition("education", new EducationEdition(manager));
+    private void registerEditions() {
+        registerEdition("bedrock", new BedrockEdition(this));
+        registerEdition("education", new EducationEdition(this));
+    }
 
+    /**
+     * Register built-in translators
+     */
+    private void registerTranslators() {
+        registerTranslator(Translator_v390ee_to_v408be.class);
+    }
+
+
+    /**
+     * Register an Edition
+     */
+    public void registerEdition(String name, Edition edition) {
+        registeredEditions.put(name, edition);
+        getLogger().debug("Registered Edition: " + name);
+    }
+
+    /**
+     * Register a Translator
+     */
+    public void registerTranslator(Class<? extends Translator> translatorClass) {
+        registeredTranslators.add(translatorClass);
+        getLogger().debug("Registered Translator: " + translatorClass.getSimpleName());
     }
 
     /**
@@ -82,5 +118,26 @@ public class GeyserReversionPlugin extends GeyserPlugin {
             }
         }
         config = Configuration.loadFromFile(configFile);
+    }
+
+    /**
+     * Replace Geyser BedrockServer with one provided by an edition
+     */
+    @GeyserEventHandler(priority = EventHandler.PRIORITY.HIGH)
+    public void onGeyserStart(GeyserStartEvent event) {
+        Edition edition = registeredEditions.get(config.getEdition());
+
+        if (edition == null) {
+            getLogger().error(String.format("Invalid Edition '%s'. Plugin disabled.", config.getEdition()));
+            return;
+        }
+
+        try {
+            Field bedrockServer = GeyserConnector.class.getDeclaredField("bedrockServer");
+            bedrockServer.setAccessible(true);
+            bedrockServer.set(GeyserConnector.getInstance(), edition.createReversionServer(GeyserConnector.getInstance().getBedrockServer().getBindAddress()));
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            getLogger().error(String.format("Unable to set Edition '%s'. Plugin disabled.", config.getEdition()), e);
+        }
     }
 }

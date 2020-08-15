@@ -16,20 +16,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package au.com.grieve.geyser.reversion.editions.mcee.commands;
+package au.com.grieve.geyser.reversion.editions.education.commands;
 
-import au.com.grieve.geyser.reversion.editions.mcee.utils.TokenManager;
+import au.com.grieve.geyser.reversion.editions.education.EducationEdition;
+import au.com.grieve.reversion.editions.education.utils.TokenManager;
 import org.geysermc.connector.command.CommandSender;
 import org.geysermc.connector.command.GeyserCommand;
 import org.geysermc.connector.common.ChatColor;
 
 public class EducationCommand extends GeyserCommand {
 
-    private final TokenManager tokenManager;
+    private final EducationEdition edition;
 
-    public EducationCommand(String name, String description, String permission, TokenManager tokenManager) {
+    public EducationCommand(String name, String description, String permission, EducationEdition edition) {
         super(name, description, permission);
-        this.tokenManager = tokenManager;
+        this.edition = edition;
     }
 
     private void showHelp(CommandSender sender) {
@@ -57,7 +58,7 @@ public class EducationCommand extends GeyserCommand {
             case "new":
                 sender.sendMessage("Copy and paste the following into your web browser:");
                 sender.sendMessage("");
-                sender.sendMessage("   " + ChatColor.YELLOW + tokenManager.getNewAuthorizationUrl().toString());
+                sender.sendMessage("   " + ChatColor.YELLOW + edition.getTokenManager().getNewAuthorizationUrl().toString());
                 break;
             case "confirm":
                 if (args.length < 2) {
@@ -65,7 +66,7 @@ public class EducationCommand extends GeyserCommand {
                     return;
                 }
                 try {
-                    tokenManager.createInitialToken(args[1]);
+                    edition.getTokenManager().createInitialToken(args[1]);
                 } catch (TokenManager.TokenException e) {
                     sender.sendMessage("Error: " + e.getMessage());
                 }

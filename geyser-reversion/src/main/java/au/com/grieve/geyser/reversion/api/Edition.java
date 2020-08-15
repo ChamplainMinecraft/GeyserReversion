@@ -18,8 +18,10 @@
 
 package au.com.grieve.geyser.reversion.api;
 
-public class TranslatorException extends Exception {
-    public TranslatorException(Throwable e) {
-        super(e);
-    }
+import au.com.grieve.reversion.ReversionServer;
+
+import java.net.InetSocketAddress;
+
+public interface Edition {
+    ReversionServer createReversionServer(InetSocketAddress address);
 }

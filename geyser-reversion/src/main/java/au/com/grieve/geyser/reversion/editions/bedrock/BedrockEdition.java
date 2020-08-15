@@ -16,22 +16,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package au.com.grieve.geyser.reversion.editions.mcee.server;
+package au.com.grieve.geyser.reversion.editions.bedrock;
 
-import au.com.grieve.geyser.reversion.server.ReversionServerEventHandler;
-import com.nukkitx.protocol.bedrock.BedrockPong;
+import au.com.grieve.geyser.reversion.api.Edition;
+import au.com.grieve.reversion.ReversionServer;
+import au.com.grieve.reversion.editions.bedrock.BedrockReversionServer;
+import lombok.RequiredArgsConstructor;
+import org.geysermc.connector.network.BedrockProtocol;
+import org.geysermc.connector.plugin.GeyserPlugin;
 
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.net.InetSocketAddress;
 
-@ParametersAreNonnullByDefault
-public class EducationServerEventHandler extends ReversionServerEventHandler {
+@RequiredArgsConstructor
+public class BedrockEdition implements Edition {
+    private final GeyserPlugin plugin;
+
     @Override
-    public BedrockPong onQuery(InetSocketAddress address) {
-        BedrockPong pong = super.onQuery(address);
-        if (pong != null) {
-            pong.setEdition("MCEE");
-        }
-        return pong;
+    public ReversionServer createReversionServer(InetSocketAddress address) {
+        return new BedrockReversionServer("bedrock", BedrockProtocol.DEFAULT_BEDROCK_CODEC.getProtocolVersion(), address);
     }
 }
