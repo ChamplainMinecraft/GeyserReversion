@@ -19,13 +19,16 @@
 package au.com.grieve.geyser.reversion.editions.education;
 
 import au.com.grieve.geyser.reversion.api.Edition;
+import au.com.grieve.geyser.reversion.editions.bedrock.handlers.BedrockServerEventHandler;
 import au.com.grieve.geyser.reversion.editions.education.commands.EducationCommand;
 import au.com.grieve.reversion.api.ReversionServer;
+import au.com.grieve.reversion.editions.education.EducationReversionServer;
 import au.com.grieve.reversion.editions.education.utils.TokenManager;
 import lombok.Getter;
 import org.geysermc.connector.GeyserConnector;
 import org.geysermc.connector.event.annotations.GeyserEventHandler;
 import org.geysermc.connector.event.events.geyser.GeyserStartEvent;
+import org.geysermc.connector.network.BedrockProtocol;
 import org.geysermc.connector.plugin.GeyserPlugin;
 
 import java.io.File;
@@ -54,10 +57,9 @@ public class EducationEdition implements Edition {
 
     @Override
     public ReversionServer createReversionServer(InetSocketAddress address) {
-        return null;
-//        plugin.getLogger().info("EducationServer listening on " + address.toString());
-//        ReversionServer server = new EducationReversionServer("bedrock", BedrockProtocol.DEFAULT_BEDROCK_CODEC, tokenManager, address);
-//        server.setHandler(new BedrockServerEventHandler(GeyserConnector.getInstance()));
-//        return server;
+        plugin.getLogger().info("EducationServer listening on " + address.toString());
+        ReversionServer server = new EducationReversionServer("bedrock", BedrockProtocol.DEFAULT_BEDROCK_CODEC, tokenManager, address);
+        server.setHandler(new BedrockServerEventHandler(GeyserConnector.getInstance()));
+        return server;
     }
 }
