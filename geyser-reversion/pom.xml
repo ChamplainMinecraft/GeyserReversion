@@ -58,6 +58,12 @@
         </dependency>
         <dependency>
             <groupId>au.com.grieve.reversion</groupId>
+            <artifactId>translator-v412be_to_v411be</artifactId>
+            <version>${reversion.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>au.com.grieve.reversion</groupId>
             <artifactId>common</artifactId>
             <version>${reversion.version}</version>
             <scope>compile</scope>
@@ -94,6 +100,12 @@
             <version>3.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.nukkitx.protocol</groupId>
+            <artifactId>bedrock-v412</artifactId>
+            <version>3.0.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -117,6 +129,7 @@
                                     <include>com.nukkitx.protocol:education-v390</include>
                                     <include>com.nukkitx.protocol:bedrock-v409</include>
                                     <include>com.nukkitx.protocol:bedrock-v411</include>
+                                    <include>com.nukkitx.protocol:bedrock-v412</include>
                                 </includes>
                             </artifactSet>
                         </configuration>
@@ -137,6 +150,11 @@
                         <relocation>
                             <pattern>com.nukkitx.protocol.bedrock.v411</pattern>
                             <shadedPattern>${project.groupId}.${project.artifactId}.nukkitx.protocol.bedrock.v411
+                            </shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>com.nukkitx.protocol.bedrock.v412</pattern>
+                            <shadedPattern>${project.groupId}.${project.artifactId}.nukkitx.protocol.bedrock.v412
                             </shadedPattern>
                         </relocation>
                     </relocations>

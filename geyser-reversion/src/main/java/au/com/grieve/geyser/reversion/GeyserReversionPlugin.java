@@ -24,8 +24,10 @@ import au.com.grieve.geyser.reversion.editions.bedrock.BedrockEdition;
 import au.com.grieve.geyser.reversion.editions.education.EducationEdition;
 import au.com.grieve.reversion.api.RegisteredTranslator;
 import au.com.grieve.reversion.api.ReversionServer;
+import au.com.grieve.reversion.translators.v390ee_to_v408be.Register_v390ee_to_v408be;
 import au.com.grieve.reversion.translators.v409be_to_v408be.Register_v409be_to_v408be;
 import au.com.grieve.reversion.translators.v411be_to_v409be.Register_v411be_to_v409be;
+import au.com.grieve.reversion.translators.v412be_to_v411be.Register_v412be_to_v411be;
 import lombok.Getter;
 import org.geysermc.connector.GeyserConnector;
 import org.geysermc.connector.event.annotations.GeyserEventHandler;
@@ -48,6 +50,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Plugin(
         name = "GeyserReversion",
@@ -88,6 +91,8 @@ public class GeyserReversionPlugin extends GeyserPlugin {
     private void registerTranslators() {
         registerTranslator(Register_v409be_to_v408be.TRANSLATOR);
         registerTranslator(Register_v411be_to_v409be.TRANSLATOR);
+        registerTranslator(Register_v390ee_to_v408be.TRANSLATOR);
+        registerTranslator(Register_v412be_to_v411be.TRANSLATOR);
     }
 
 
@@ -158,11 +163,14 @@ public class GeyserReversionPlugin extends GeyserPlugin {
             getLogger().error(String.format("Unable to set Edition '%s'. Plugin disabled.", config.getEdition()), e);
         }
 
-        GeyserConnector.getInstance().getBedrockServer().bind().whenComplete((avoid, throwable) -> {
-            if (throwable != null) {
-                getLogger().severe(LanguageUtils.getLocaleStringLog("geyser.core.fail", address.getAddress().toString(), address.getPort()));
-                throwable.printStackTrace();
-            }
-        }).join();
+        // Give the old BedrockServer time to close down
+        GeyserConnector.getInstance().getGeneralThreadPool().schedule(() -> {
+            GeyserConnector.getInstance().getBedrockServer().bind().whenComplete((avoid, throwable) -> {
+                if (throwable != null) {
+                    getLogger().severe(LanguageUtils.getLocaleStringLog("geyser.core.fail", address.getAddress().toString(), address.getPort()));
+                    throwable.printStackTrace();
+                }
+            }).join();
+        }, 1, TimeUnit.SECONDS);
     }
 }
