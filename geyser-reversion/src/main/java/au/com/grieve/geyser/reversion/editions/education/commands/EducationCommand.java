@@ -18,6 +18,7 @@
 
 package au.com.grieve.geyser.reversion.editions.education.commands;
 
+import java.util.Arrays;
 import au.com.grieve.geyser.reversion.editions.education.EducationEdition;
 import au.com.grieve.reversion.editions.education.utils.TokenManager;
 import org.geysermc.connector.command.CommandSender;
@@ -49,6 +50,10 @@ public class EducationCommand extends GeyserCommand {
             return;
         }
 
+        if (sender.getClass().getSimpleName().equals("BungeeCommandSender")) {
+            args = Arrays.copyOfRange(args, 1, args.length);
+        }
+
         if (args.length == 0) {
             showHelp(sender);
             return;
@@ -67,10 +72,10 @@ public class EducationCommand extends GeyserCommand {
                 }
                 try {
                     edition.getTokenManager().createInitialToken(args[1]);
+                    sender.sendMessage("Successfully created new token");
                 } catch (TokenManager.TokenException e) {
                     sender.sendMessage("Error: " + e.getMessage());
                 }
-                sender.sendMessage("Successfully created new token");
                 break;
             default:
                 showHelp(sender);
